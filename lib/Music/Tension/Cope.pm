@@ -10,30 +10,12 @@ use warnings;
 
 use Carp qw/croak/;
 use List::Util qw/max min sum/;
+use Scalar::Util qw/looks_like_number/;
 
 our @ISA     = qw(Music::Tension);    # or Moo/whatev it up
 our $VERSION = '0.01';
 
 my $DEG_IN_SCALE = 12;
-
-# Interval tentions taken from "Computer Models of Musical Creativity",
-# Cope, p.229-230, from least tension (0.0) to greatest (1.0).
-my %tensions = (
-  0  => 0.0,
-  1  => 1.0,
-  2  => 0.8,
-  3  => 0.225,
-  4  => 0.2,
-  5  => 0.55,
-  6  => 0.65,
-  7  => 0.1,
-  8  => 0.275,
-  9  => 0.25,
-  10 => 0.7,
-  11 => 0.9,
-);
-# Intervals greater than octave more consonant by virtue of spread
-my $octave_adjust = -0.02;
 
 ########################################################################
 #
@@ -44,6 +26,37 @@ sub new {
   my ( $class, %param ) = @_;
   my $self = {};
 
+  if ( exists $param{tensions} ) {
+    croak "tensions must be hash reference" if ref $param{tensions} ne 'HASH';
+    $self->{_tensions} = $param{tensions};
+  } else {
+    # Default interval tentions taken from "Computer Models of Musical
+    # Creativity", Cope, p.229-230, from least tension (0.0) to greatest
+    # (1.0), less if greater than an octave.
+    $self->{_tensions} = {
+      0  => 0.0,
+      1  => 1.0,
+      2  => 0.8,
+      3  => 0.225,
+      4  => 0.2,
+      5  => 0.55,
+      6  => 0.65,
+      7  => 0.1,
+      8  => 0.275,
+      9  => 0.25,
+      10 => 0.7,
+      11 => 0.9,
+    };
+  }
+
+  if ( exists $param{octave_adjust} ) {
+    croak "octave adjust must be a number"
+      if !looks_like_number $param{octave_adjust};
+    $self->{_octave_adjust} = $param{octave_adjust};
+  } else {
+    $self->{_octave_adjust} = -0.02;
+  }
+
   bless $self, $class;
   return $self;
 }
@@ -52,17 +65,19 @@ sub new {
 # considerations (e.g. highest or lowest tension for a series of notes,
 # assuming a cadence, and "good enough" weighting if on or off The Beat.
 
-# Tension from the root (first) note to others present in passed pitch
-# set. Returns average, max, min, array ref of tensions. TODO might need
-# a better name.
+# Tension from the lowest note to others above it in a passed pitch set.
+# Returns average, max, min, array ref of tensions. TODO might need a
+# better name.
 sub pcs {
   my ( $self, $pset ) = @_;
   croak "pitch set must be array ref\n" unless ref $pset eq 'ARRAY';
   croak "pitch set must contain something\n" if !@$pset;
 
   my @tensions;
-  for my $i ( 1 .. $#$pset ) {
-    push @tensions, $self->pitches( $pset->[0], $pset->[$i] );
+  for my $i ( 0 .. $#$pset - 1 ) {
+    for my $j ( $i + 1 .. $#$pset ) {
+      push @tensions, $self->pitches( $pset->[$i], $pset->[$j] );
+    }
   }
 
   return sum(@tensions) / @tensions, max(@tensions), min(@tensions),
@@ -73,13 +88,15 @@ sub pcs {
 sub pitches {
   my ( $self, $p1, $p2 ) = @_;
   croak "two pitches required" if !defined $p1 or !defined $p2;
-  croak "pitches must be integers" if $p1 !~ m/^-?\d+$/ or $p2 !~ m/^-?\d+$/;
+  croak "pitches must be integers"
+    if $p1 !~ m/^-?\d+$/
+      or $p2 !~ m/^-?\d+$/;
 
   my $interval = abs( $p2 - $p1 );
   my $octave   = int( $interval / $DEG_IN_SCALE );
   my $tension =
-    $tensions{ $interval % $DEG_IN_SCALE } +
-    ( $octave > 0 ? $octave_adjust : 0 );
+    $self->{_tensions}->{ $interval % $DEG_IN_SCALE } +
+    ( $octave > 0 ? $self->{_octave_adjust} : 0 );
   $tension = 0 if $tension < 0;
 
   return $tension;

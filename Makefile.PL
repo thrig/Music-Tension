@@ -6,9 +6,10 @@ WriteMakefile(
   VERSION_FROM => 'lib/Music/Tension.pm',
   LICENSE      => 'perl',
   PREREQ_PM    => {
-    Carp       => 0,
-    List::Util => 0,
-    Test::More => 0,
+    Carp         => 0,
+    List::Util   => 0,
+    Scalar::Util => 0,
+    Test::More   => 0,
   },
   ( $] >= 5.005
     ?    ## Add these new keywords supported since 5.005
