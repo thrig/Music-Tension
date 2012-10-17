@@ -52,6 +52,9 @@ sub new {
 # considerations (e.g. highest or lowest tension for a series of notes,
 # assuming a cadence, and "good enough" weighting if on or off The Beat.
 
+# Tension from the root (first) note to others present in passed pitch
+# set. Returns average, max, min, array ref of tensions. TODO might need
+# a better name.
 sub pcs {
   my ( $self, $pset ) = @_;
   croak "pitch set must be array ref\n" unless ref $pset eq 'ARRAY';
@@ -66,6 +69,7 @@ sub pcs {
     \@tensions;
 }
 
+# TODO rename "between" for $mtens->between($x, $y) reading code?
 sub pitches {
   my ( $self, $p1, $p2 ) = @_;
   croak "two pitches required" if !defined $p1 or !defined $p2;
