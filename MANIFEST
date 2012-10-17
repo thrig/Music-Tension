@@ -1,0 +1,8 @@
+MANIFEST
+Makefile.PL
+README
+lib/Music/Tension.pm
+lib/Music/Tension/Cope.pm
+t/Music-Tension-Cope.t
+t/Music-Tension.t
+t/pod.t
