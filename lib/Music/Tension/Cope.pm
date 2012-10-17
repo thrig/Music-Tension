@@ -65,22 +65,32 @@ sub new {
 # considerations (e.g. highest or lowest tension for a series of notes,
 # assuming a cadence, and "good enough" weighting if on or off The Beat.
 
-# Tension from the lowest note to others above it in a passed pitch set.
-# Returns average, max, min, array ref of tensions. TODO might need a
-# better name.
+# Tension from each lowest note to all others above it in a passed pitch
+# set. Returns average, max, min, array ref of tensions. TODO might need
+# a better name.
 sub pcs {
   my ( $self, $pset ) = @_;
   croak "pitch set must be array ref\n" unless ref $pset eq 'ARRAY';
   croak "pitch set must contain something\n" if !@$pset;
+  my @pcs = @$pset;
 
-  my @tensions;
-  for my $i ( 0 .. $#$pset - 1 ) {
-    for my $j ( $i + 1 .. $#$pset ) {
-      push @tensions, $self->pitches( $pset->[$i], $pset->[$j] );
+  # Reposition pitches upwards if subsequent lower than initial notes
+  # (makes inversions more dissonant than root position chords, for one,
+  # and does the "right thing" with <c e g c> or qw/0 4 7 0/).
+  for my $i ( 1 .. $#pcs ) {
+    while ( $pcs[$i] < $pcs[ $i - 1 ] ) {
+      $pcs[$i] += $DEG_IN_SCALE;
     }
   }
 
-  return sum(@tensions) / @tensions, max(@tensions), min(@tensions),
+  my @tensions;
+  for my $i ( 0 .. $#pcs - 1 ) {
+    for my $j ( $i + 1 .. $#pcs ) {
+      push @tensions, $self->pitches( $pcs[$i], $pcs[$j] );
+    }
+  }
+
+  return sum(@tensions) / @tensions, min(@tensions), max(@tensions),
     \@tensions;
 }
 
@@ -114,13 +124,25 @@ Music::Tension::Cope - tension analysis for 12 pitch material
 Beta interface! May be subject to change without notice!
 
   use Music::Tension;
-  my $mto = Music::Tension->new;
+  my $mtc = Music::Tension->new;
 
-  my $tension = $mto->pitches(4, 17);
+  my $tension = $mtc->pitches(4, 17);
+  my ( $t_avg, $t_min, $t_max, $t_ref ) = $mtc->pcs(qw/0 4 7/);
 
 =head1 DESCRIPTION
 
-Music tension analysis, David Cope style.
+Music tension analysis, David Cope style. The two methods (besides
+B<new> for blessings) are B<pitches> which accepts two integer pitches
+and returns the tension for them, and B<pcs>. B<pcs> is more
+complicated, accepting an array reference of pitches, and performs
+automatic octave adjustment (the pitches are assumed to be from
+lowest note to highest; should a pitch later in the list be lower
+than the previous pitch, it will be bumped up as many octaves as
+necessary) before tallying the tension on each lowest note with all
+higher notes in turn. This means chords such as <c dis e g> will have
+the minor 2nd in the middle counted, instead of just from c upwards, and
+that inversions will be ranked with higher tension than the root
+position chord (I <c e g> vs. I6 <e g c> vs. I64 <g c e>).
 
 =head1 SEE ALSO
 
@@ -129,7 +151,20 @@ Music tension analysis, David Cope style.
 =item *
 
 "Computer Models of Musical Creativity", David Cope, 2005. ISBN
-0-262-03338-0.
+0-262-03338-0. Tension values shamelessly lifted from this book.
+
+=item *
+
+Music::AtonalUtil
+
+=item *
+
+Music::Chord::Positions
+
+=item *
+
+"Theory of Harmony", Arnold Schoenberg, 1978. ISBN 978-0-520-26608-7.
+Chord positions, inversions, harmony basics.
 
 =back
 
