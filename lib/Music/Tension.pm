@@ -10,7 +10,9 @@ our @ISA = qw();
 
 our $VERSION = '0.01';
 
-# TODO so this would be the parent class
+# TODO so this would be the parent class, if other methods of analysing
+# tension were to be added, but do not know what all shared methods
+# would be offered between such modules...
 
 1;
 __END__
@@ -23,12 +25,11 @@ Music::Tension - Perl extension for music tension analysis
 
 Beta interface! May be subject to change without notice!
 
-  use Music::Tension;
-  TODO
+  use Music::Tension::Cope;
 
 =head1 DESCRIPTION
 
-Music tension analysis.
+Music tension analysis; just Music::Tension::Cope for now.
 
 =head1 SEE ALSO
 

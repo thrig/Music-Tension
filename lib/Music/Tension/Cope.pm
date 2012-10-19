@@ -1,4 +1,4 @@
-# "Copian" tension analysis for 12-pitch material.
+# "Copian" tension analysis for 12-pitch material in equal temperament.
 #
 # Beta interface! May be subject to change without notice!
 
@@ -12,7 +12,7 @@ use Carp qw/croak/;
 use List::Util qw/max min sum/;
 use Scalar::Util qw/looks_like_number/;
 
-our @ISA     = qw(Music::Tension);    # or Moo/whatev it up
+our @ISA     = qw(Music::Tension);    # but doesn't do anything right now
 our $VERSION = '0.01';
 
 my $DEG_IN_SCALE = 12;
@@ -94,7 +94,7 @@ sub pcs {
     \@tensions;
 }
 
-# TODO rename "between" for $mtens->between($x, $y) reading code?
+# TODO might need better name
 sub pitches {
   my ( $self, $p1, $p2 ) = @_;
   croak "two pitches required" if !defined $p1 or !defined $p2;
@@ -131,18 +131,24 @@ Beta interface! May be subject to change without notice!
 
 =head1 DESCRIPTION
 
-Music tension analysis, David Cope style. The two methods (besides
+Music tension (how consonant or dissonant the pitches are) analysis of
+equal temperament intervals, David Cope style. The two methods (besides
 B<new> for blessings) are B<pitches> which accepts two integer pitches
 and returns the tension for them, and B<pcs>. B<pcs> is more
 complicated, accepting an array reference of pitches, and performs
-automatic octave adjustment (the pitches are assumed to be from
-lowest note to highest; should a pitch later in the list be lower
-than the previous pitch, it will be bumped up as many octaves as
-necessary) before tallying the tension on each lowest note with all
-higher notes in turn. This means chords such as <c dis e g> will have
-the minor 2nd in the middle counted, instead of just from c upwards, and
-that inversions will be ranked with higher tension than the root
-position chord (I <c e g> vs. I6 <e g c> vs. I64 <g c e>).
+automatic octave adjustment (the pitches are assumed to be from lowest
+note to highest; should a pitch later in the list be lower than the
+previous pitch, it will be bumped up as many octaves as necessary)
+before tallying the tension on each lowest note with all higher notes in
+turn. This means chords such as <c dis e g> will have the minor 2nd in
+the middle counted, instead of just from c upwards, and that inversions
+will be ranked with higher tension than the root position chord (I <c e
+g> vs. I6 <e g c> vs. I64 <g c e>).
+
+B<pcs> currently ranks the 2nd inversion of the major triad as less
+tense than a 1st inversion of said traid, so that might bear looking
+into (overtone analysis to find how off-root what looks like the root
+is? but that would only work for triads, not non-triadic pitch sets).
 
 =head1 SEE ALSO
 
