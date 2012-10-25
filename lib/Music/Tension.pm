@@ -19,7 +19,7 @@ __END__
 
 =head1 NAME
 
-Music::Tension - Perl extension for music tension analysis
+Music::Tension - music tension analysis
 
 =head1 SYNOPSIS
 
