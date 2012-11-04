@@ -13,7 +13,7 @@ use List::Util qw/max min sum/;
 use Scalar::Util qw/looks_like_number/;
 
 our @ISA     = qw(Music::Tension);    # but doesn't do anything right now
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 my $DEG_IN_SCALE = 12;
 
@@ -74,11 +74,11 @@ sub pcs {
   croak "pitch set must contain something\n" if !@$pset;
   my @pcs = @$pset;
 
-  # Reposition pitches upwards if subsequent lower than initial notes
-  # (makes inversions more dissonant than root position chords, for one,
-  # and does the "right thing" with <c e g c> or qw/0 4 7 0/).
+  # Reposition pitches upwards if subsequent lower than the root (makes
+  # inversions more dissonant than root position chords, for one, and
+  # does the "right thing" with <c e g c> or qw/0 4 7 0/).
   for my $i ( 1 .. $#pcs ) {
-    while ( $pcs[$i] < $pcs[ $i - 1 ] ) {
+    while ( $pcs[$i] < $pcs[0] ) {
       $pcs[$i] += $DEG_IN_SCALE;
     }
   }
@@ -149,6 +149,12 @@ B<pcs> currently ranks the 2nd inversion of the major triad as less
 tense than a 1st inversion of said traid, so that might bear looking
 into (overtone analysis to find how off-root what looks like the root
 is? but that would only work for triads, not non-triadic pitch sets).
+
+B<pcs> calculates assuming closed position chords, and will move
+subsequent pitches up a register if they are below the first pitch,
+which is presumed to be the root:
+
+  <10 0 4 7> is considered as <10 12 16 19>
 
 =head1 SEE ALSO
 
