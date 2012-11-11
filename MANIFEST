@@ -1,6 +1,7 @@
 MANIFEST
 Makefile.PL
 README
+eg/calc-forte-tensions
 lib/Music/Tension.pm
 lib/Music/Tension/Cope.pm
 t/Music-Tension-Cope.t
