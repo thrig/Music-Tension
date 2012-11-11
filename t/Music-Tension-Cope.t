@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 11;
+use Test::More tests => 13;
 BEGIN { use_ok('Music::Tension::Cope') }
 
 my $mt = Music::Tension::Cope->new;
@@ -32,8 +32,21 @@ is_deeply(
   'vertical reposition test multiple registers'
 );
 
+is( $mt->duration( 0.3, 0.25 ),
+  0.055, 'major triad qn duration given tension' );
+
+# duration-supplied-pitch_set depends on ->vertical working
+is( scalar $mt->duration( [qw/0 4 7/], 0.25 ),
+  0.055, 'major triad qn duration lookup tension' );
+
+########################################################################
+#
+# new() param tests
+
 my $mtc = Music::Tension::Cope->new(
-  tensions => {
+  duration_weight => 0.15,
+  octave_adjust   => 0.2,
+  tensions        => {
     0  => 0.33,
     1  => 0.5,
     2  => 0,
@@ -47,7 +60,6 @@ my $mtc = Music::Tension::Cope->new(
     10 => 0,
     11 => 0
   },
-  octave_adjust => 0.2,
 );
 is( $mtc->pitches( 0, 0 ),  0.33, 'unison tension test (custom)' );
 is( $mtc->pitches( 0, 13 ), 0.7,  'minor 2nd +8va tension test (custom)' );
