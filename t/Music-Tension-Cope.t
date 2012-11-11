@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 17;
+use Test::More tests => 21;
 BEGIN { use_ok('Music::Tension::Cope') }
 
 my $mt = Music::Tension::Cope->new;
@@ -14,13 +14,17 @@ is( $mt->metric( 2, 2 ), 0.1,  'metric 4/4 beat 2' );
 is( $mt->metric( 3, 6 ), 0.05, 'metric 4/4 beat 2' );
 is( $mt->metric( 4, 2 ), 0.2,  'metric 4/4 beat 2' );
 
-is( $mt->pitches( 0, 0 ),  0, 'unison tension test' );
-is( $mt->pitches( 0, 12 ), 0, 'octave tension test' );
+is( $mt->pitches( 0, 0 ),  0, 'unison tension' );
+is( $mt->pitches( 0, 12 ), 0, 'octave tension' );
 
-is( $mt->pitches( 0, 1 ),  1.0,  'minor 2nd tension test' );
-is( $mt->pitches( 0, 13 ), 0.98, 'minor 2nd +8va tension test' );
-# multiple ocatves no more consonant
-is( $mt->pitches( 0, 25 ), 0.98, 'minor 2nd +8va*2 tension test' );
+is( $mt->pitches( 0, 1 ),  1.0,  'minor 2nd tension' );
+is( $mt->pitches( 0, 13 ), 0.98, 'minor 2nd +8va tension' );
+# multiple octaves no more consonant
+is( $mt->pitches( 0, 25 ), 0.98, 'minor 2nd +8va*2 tension' );
+
+# approach mostly just calls ->pitches(0, x)
+is( $mt->approach(0), 0,   'unison approach tension' );
+is( $mt->approach(7), 0.1, 'fifth approach tension' );
 
 # vertical depends on ->pitches working
 is_deeply(
@@ -33,12 +37,12 @@ is_deeply(
 is_deeply(
   [ $mt->vertical( [qw/14 1 2 3 12 13/] ) ],
   [ 3.5, 0, 1, [ 0.9, 0, 1, 0.7, 0.9 ] ],
-  'vertical reposition test single register'
+  'vertical reposition, single register'
 );
 is_deeply(
   [ $mt->vertical( [qw/60 11 12 13/] ) ],
   [ 1.9, 0, 1, [ 0.9, 0, 1 ] ],
-  'vertical reposition test multiple registers'
+  'vertical reposition, multiple registers'
 );
 
 is( $mt->duration( 0.3, 0.25 ),
@@ -50,11 +54,11 @@ is( scalar $mt->duration( [qw/0 4 7/], 0.25 ),
 
 ########################################################################
 #
-# new() param tests
+# new() params
 
 my $mtc = Music::Tension::Cope->new(
-  duration_weight => 0.15,
-  metric_weight   => 0.05,
+  duration_weight => 0.5,
+  metric_weight   => 0.5,
   octave_adjust   => 0.2,
   tensions        => {
     0  => 0.33,
@@ -74,4 +78,6 @@ my $mtc = Music::Tension::Cope->new(
 is( $mtc->pitches( 0, 0 ),  0.33, 'unison tension test (custom)' );
 is( $mtc->pitches( 0, 13 ), 0.7,  'minor 2nd +8va tension test (custom)' );
 
-# XXX *_weight tests
+is( $mtc->duration( 0.3, 0.25 ),
+  0.275, 'major triad qn duration custom weight' );
+is( $mtc->metric( 1, 2 ), 0.25, 'metric 4/4 beat 1 custom weight' );

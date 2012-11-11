@@ -12,7 +12,7 @@ use Carp qw/croak/;
 use Scalar::Util qw/looks_like_number/;
 
 our @ISA     = qw(Music::Tension);    # but doesn't do anything right now
-our $VERSION = '0.30';
+our $VERSION = '0.50';
 
 my $DEG_IN_SCALE = 12;
 
@@ -77,6 +77,16 @@ sub new {
 
   bless $self, $class;
   return $self;
+}
+
+# Approach tension - horizontal tension, I'm assuming harmonic function,
+# therefore limit to intervals in same register.
+sub approach {
+  my ( $self, $p1 ) = @_;
+  croak "pitch is required" if !defined $p1;
+  croak "pitch must be integer" if $p1 !~ m/^-?\d+$/;
+
+  $self->pitches( 0, $p1 % $DEG_IN_SCALE );
 }
 
 # Tension over durations
@@ -185,15 +195,34 @@ Beta interface! Has and will change without notice!
   $tension->duration( $sum,        1/4 );
   $tension->duration( [qw/0 4 7/], 1/8 );
 
+  $tension->metric(1, 2);  # beat 1, with custom value 2
+
+  $tension->approach(7);   # motion by perfect fifth from prev.
+
 =head1 DESCRIPTION
+
+Parsing music into a form suitable for use by this module and practical
+uses of the results are left as an exercise to the reader.
 
 This module offers tension analysis of equal temperament 12-pitch music,
 using the method outlined by David Cope in the text "Computer Models of
 Musical Creativity". The various methods will calculate the tension of
-verticals (simultaneous pitches), over a given duration, and so forth.
-Larger numbers indicate greater tension (dissonance) and smaller numbers
-consonance. Parsing music into a form suitable for use by this module
-and practical uses of the results are left as an exercise to the reader.
+verticals (simultaneous pitches), tension over a given duration, and so
+forth. Larger numbers indicate greater tension (dissonance) and smaller
+numbers consonance.
+
+Cope uses the sum of the methods B<approach>, B<duration>, B<metric>,
+and B<vertical> to calculate the overall tension for each beat in an
+example Chorale. B<approach> and B<metric> will be the trickiest to
+implement, as they rely on knowing the interval of the harmonic change
+between the beats or having a lookup table available to calculate
+tension for random beats in random time signatures.
+
+Various details are not captured by the tension analysis, notably if a
+particular pitch is chromatic (implying an underlying key that is
+being diverged from), musical style, dynamics, the sonic envelope, and
+so forth. If these are important, they should be included in the
+tension analysis.
 
 Tension results may change between releases due to code changes. Be sure
 to update all old tension values before starting any new analysis or
@@ -222,13 +251,11 @@ instead of using the Cope-derived defaults.
 
 =item *
 
-I<duration_weight> adjusts the weighting given to B<duration> tension
-calculations.
+I<duration_weight> adjusts the weighting given to B<duration> tensions.
 
 =item *
 
-I<metric_weight> adjusts the weighting given to B<metric> tension
-calculations.
+I<metric_weight> adjusts the weighting given to B<metric> tensions.
 
 =item *
 
@@ -239,9 +266,25 @@ the same adjustment.
 =item *
 
 I<tensions> must be a hash reference that must contain all intervals
-from (unison) to 11 (major seventh) inclusive.
+from (unison) to 11 (major seventh) inclusive. The default values are a
+distillation of an involved consideration of the overtone series by
+Cope; see the references below for the gory details.
 
 =back
+
+=item B<approach> I<pitch1>
+
+Presently a thin wrapper around B<pitches>, where I<pitch1> is relative
+to unison (0), and will be mapped to the same register. Used for
+horizontal tensions. Cope indicates this is for "root motions" which
+from the example provided appears to be the harmonic changes, not
+specific interval leaps, so tension of unison for a tonic extension,
+tension of fifth for I-V6-I stasis or trips up or down the circle of
+fifths, and so forth:
+
+  $tension->approach( 0 );    # stasis (tonic -> tonic)
+  $tension->approach( 5 );    # perfect fourth (tonic -> pre-dominant)
+  $tension->approach( 7 );    # fifth (tonic -> dominant)
 
 =item B<duration> I<pitch_set_or_tension>, I<duration>
 
@@ -299,7 +342,7 @@ B<vertical> returns the tension, minimum tension, maximum tension, and a
 reference to a list of tensions for each interval. Except in scalar
 context, where just the tension value is returned.
 
-An alternative approach would be to perform tension checks on each pitch
+An alternative method would be to perform tension checks on each pitch
 to any higher pitches, such that C<0 3 4 5> would also count the
 intervals present above the root (3 to 4, 3 to 5, and 4 to 5), instead
 of just the minor 3rd, major 3rd, and perfect fourth up from the root.

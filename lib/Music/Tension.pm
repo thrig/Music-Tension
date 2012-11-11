@@ -10,7 +10,7 @@ use warnings;
 
 our @ISA = qw();
 
-our $VERSION = '0.30';
+our $VERSION = '0.50';
 
 1;
 __END__
