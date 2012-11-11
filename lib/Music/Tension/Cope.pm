@@ -65,7 +65,7 @@ sub new {
 
 # Tension from first note to all others above it in a passed pitch set.
 # Returns sum, min, max, and array ref of tensions.
-sub pcs {
+sub vertical {
   my ( $self, $pset ) = @_;
   croak "pitch set must be array ref\n" unless ref $pset eq 'ARRAY';
   croak "pitch set must contain multiple elements\n" if @$pset < 2;
@@ -125,7 +125,7 @@ Beta interface! May change without notice!
   my $mtc = Music::Tension->new;
 
   my $tension = $mtc->pitches(4, 17);
-  my ( $t_sum, $t_min, $t_max, $t_ref ) = $mtc->pcs(qw/0 4 7/);
+  my ( $t_sum, $t_min, $t_max, $t_ref ) = $mtc->vertical(qw/0 4 7/);
 
 =head1 DESCRIPTION
 
@@ -159,11 +159,11 @@ same octave adjustment.
     octave_adjust => 0.2,
   );
 
-=item B<pcs> I<pitch set reference>
+=item B<vertical> I<pitch set reference>
 
-B<pcs> accepts an array reference of pitches, and tallies tensions
-between the initial pitch to each subsequent. B<pcs> will first move
-subsequent pitches up a register if they are below the first pitch:
+B<vertical> accepts an array reference of pitches (integers), and tallies
+tensions between the initial pitch to each subsequent. B<vertical> will first
+move subsequent pitches up a register if they are below the first pitch:
 
   <10 0 4 7> is considered as <10 12 16 19>
 
@@ -172,7 +172,7 @@ below the initial pitch will be adjusted to unison. If the
 adjustments are a problem, ensure that the first pitch is the lowest
 of the pitch set.
 
-B<pcs> returns the tension, minimum tension, maximum tension, and a
+B<vertical> returns the tension, minimum tension, maximum tension, and a
 reference to a list of tensions for each interval.
 
 An alternative approach would be to perform tension checks on each pitch

@@ -15,21 +15,21 @@ is( $mt->pitches( 0, 13 ), 0.98, 'minor 2nd +8va tension test' );
 is( $mt->pitches( 0, 25 ), 0.98, 'minor 2nd +8va*2 tension test' );
 
 is_deeply(
-  [ $mt->pcs( [qw/0 3 7/] ) ],
+  [ $mt->vertical( [qw/0 3 7/] ) ],
   [ 0.325, 0.1, 0.225, [ 0.225, 0.1 ] ],
-  'pcs test'
+  'vertical tension'
 );
 
 # repositioning edge cases
 is_deeply(
-  [ $mt->pcs( [qw/14 1 2 3 12 13/] ) ],
+  [ $mt->vertical( [qw/14 1 2 3 12 13/] ) ],
   [ 3.5, 0, 1, [ 0.9, 0, 1, 0.7, 0.9 ] ],
-  'pcs reposition test single register'
+  'vertical reposition test single register'
 );
 is_deeply(
-  [ $mt->pcs( [qw/60 11 12 13/] ) ],
+  [ $mt->vertical( [qw/60 11 12 13/] ) ],
   [ 1.9, 0, 1, [ 0.9, 0, 1 ] ],
-  'pcs reposition test multiple registers'
+  'vertical reposition test multiple registers'
 );
 
 my $mtc = Music::Tension::Cope->new(

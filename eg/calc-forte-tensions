@@ -19,7 +19,7 @@ print "# Via Music::Tension::Cope v.$Music::Tension::Cope::VERSION as of ",
 my $fnums = $atu->fnums;
 for my $fn ( sort keys %$fnums ) {
   my $icc = $atu->interval_class_content( $fnums->{$fn} );
-  my ( $t, $min, $max ) = $tension->pcs( $fnums->{$fn} );
+  my ( $t, $min, $max ) = $tension->vertical( $fnums->{$fn} );
   printf "%s\t%-16s\t%-8s\t%.03f  %.03f  %.03f\n", $fn,
     join( ',', @{ $fnums->{$fn} } ),
     join( '', @$icc ), $t, $min, $max;
