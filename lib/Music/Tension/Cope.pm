@@ -12,7 +12,7 @@ use Carp qw/croak/;
 use Scalar::Util qw/looks_like_number/;
 
 our @ISA     = qw(Music::Tension);    # but doesn't do anything right now
-our $VERSION = '0.20';
+our $VERSION = '0.30';
 
 my $DEG_IN_SCALE = 12;
 
@@ -30,6 +30,14 @@ sub new {
     $self->{_duration_weight} = $param{duration_weight};
   } else {
     $self->{_duration_weight} = 0.1;
+  }
+
+  if ( exists $param{metric_weight} ) {
+    croak "metric_weight must be a number"
+      if !looks_like_number $param{metric_weight};
+    $self->{_metric_weight} = $param{metric_weight};
+  } else {
+    $self->{_metric_weight} = 0.1;
   }
 
   if ( exists $param{octave_adjust} ) {
@@ -92,6 +100,18 @@ sub duration {
   #   accumulated tension weighting"
   return $self->{_duration_weight} * $duration +
     $self->{_duration_weight} * $tension;
+}
+
+# Tension based on where note is within measure p.232 [Cope 2005]
+sub metric {
+  my ( $self, $b, $v ) = @_;
+  croak "input must be positive numeric"
+    if !looks_like_number($b)
+      or $b <= 0
+      or !looks_like_number($v)
+      or $v <= 0;
+
+  return ( $b * $self->{_metric_weight} ) / $v;
 }
 
 # Tension from first note to all others above it in a passed pitch set.
@@ -193,6 +213,7 @@ instead of using the Cope-derived defaults.
 
   my $tension = Music::Tension::Cope->new(
     duration_weight => 0.42,
+    metric_weight   => 0.42,
     octave_adjust   => 0.42,
     tensions        => { 0 => 0.42, 1 => 0.42, ... },
   );
@@ -202,6 +223,11 @@ instead of using the Cope-derived defaults.
 =item *
 
 I<duration_weight> adjusts the weighting given to B<duration> tension
+calculations.
+
+=item *
+
+I<metric_weight> adjusts the weighting given to B<metric> tension
 calculations.
 
 =item *
@@ -234,6 +260,26 @@ significant alterations to that over the course of a work.
 The duration tension may also need adjustment depending on how well the
 instrument involved sustains; consider a xylophone vs. a piano vs. a
 piano with the sustain pedal down vs. a church organ.
+
+=item B<metric> I<beat_number>, I<beat_value>
+
+Tension calculation based on the position in a measure. The beat number
+should be an positive integer (1 for first beat of measure, 2 for
+second, etc) and the value a non-zero number used to adjust the results.
+
+Cope indicates the use of a lookup table to provide the value, due to
+the complexity of where the weightings occur depending on the meter
+(e.g. 3/4 stresses the first (and perhaps second) beats, while 6/8 has
+stress on first and fourth). Lilypond auto-beaming should show one
+opinion on how notes are grouped and therefore where the stresses are,
+among other sources. Cope's tension values are lower on the beat, and
+higher towards the end of the measure:
+
+            4/4 time
+  ----------------------------------
+  beat     | 1     2     3     4
+  value    | 2     2     6     2
+  tension  | 0.05  0.10  0.05  0.20
 
 =item B<vertical> I<pitch_set_reference>
 

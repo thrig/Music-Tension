@@ -1,10 +1,18 @@
 use strict;
 use warnings;
 
-use Test::More tests => 13;
+use Test::More tests => 17;
 BEGIN { use_ok('Music::Tension::Cope') }
 
 my $mt = Music::Tension::Cope->new;
+
+# Worked out from p.233 [Cope 2005] example, XXX find his lookup tables
+# in published code? If so, could have { metername => { beatnum => value, ...
+# lookup hash included in this module.
+is( $mt->metric( 1, 2 ), 0.05, 'metric 4/4 beat 1' );
+is( $mt->metric( 2, 2 ), 0.1,  'metric 4/4 beat 2' );
+is( $mt->metric( 3, 6 ), 0.05, 'metric 4/4 beat 2' );
+is( $mt->metric( 4, 2 ), 0.2,  'metric 4/4 beat 2' );
 
 is( $mt->pitches( 0, 0 ),  0, 'unison tension test' );
 is( $mt->pitches( 0, 12 ), 0, 'octave tension test' );
@@ -14,6 +22,7 @@ is( $mt->pitches( 0, 13 ), 0.98, 'minor 2nd +8va tension test' );
 # multiple ocatves no more consonant
 is( $mt->pitches( 0, 25 ), 0.98, 'minor 2nd +8va*2 tension test' );
 
+# vertical depends on ->pitches working
 is_deeply(
   [ $mt->vertical( [qw/0 3 7/] ) ],
   [ 0.325, 0.1, 0.225, [ 0.225, 0.1 ] ],
@@ -45,6 +54,7 @@ is( scalar $mt->duration( [qw/0 4 7/], 0.25 ),
 
 my $mtc = Music::Tension::Cope->new(
   duration_weight => 0.15,
+  metric_weight   => 0.05,
   octave_adjust   => 0.2,
   tensions        => {
     0  => 0.33,
@@ -63,3 +73,5 @@ my $mtc = Music::Tension::Cope->new(
 );
 is( $mtc->pitches( 0, 0 ),  0.33, 'unison tension test (custom)' );
 is( $mtc->pitches( 0, 13 ), 0.7,  'minor 2nd +8va tension test (custom)' );
+
+# XXX *_weight tests

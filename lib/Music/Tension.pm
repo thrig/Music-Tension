@@ -1,4 +1,4 @@
-# TODO so this would be the parent class, if other methods of analysing
+# TODO so this would be the parent class, if other methods of analyzing
 # tension were to be added, but do not know what all shared methods
 # would be offered between such modules...
 
@@ -10,7 +10,7 @@ use warnings;
 
 our @ISA = qw();
 
-our $VERSION = '0.20';
+our $VERSION = '0.30';
 
 1;
 __END__
