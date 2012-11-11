@@ -199,7 +199,7 @@ those two pitches.
 
 =item *
 
-"The Craft of Musical Composition", Paul Hindemith, 1937.
+"The Craft of Musical Composition", Paul Hindemith, 1942. (4th edition)
 
 =back
 
