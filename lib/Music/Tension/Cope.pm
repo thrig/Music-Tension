@@ -1,6 +1,6 @@
 # "Copian" tension analysis for 12-pitch material in equal temperament.
 #
-# Beta interface! May be subject to change without notice!
+# Beta interface! May change without notice!
 
 package Music::Tension::Cope;
 
@@ -9,11 +9,10 @@ use strict;
 use warnings;
 
 use Carp qw/croak/;
-use List::Util qw/max min sum/;
 use Scalar::Util qw/looks_like_number/;
 
 our @ISA     = qw(Music::Tension);    # but doesn't do anything right now
-our $VERSION = '0.02';
+our $VERSION = '0.10';
 
 my $DEG_IN_SCALE = 12;
 
@@ -21,13 +20,16 @@ my $DEG_IN_SCALE = 12;
 #
 # SUBROUTINES
 
-# boilerplate until figure out something better
 sub new {
   my ( $class, %param ) = @_;
   my $self = {};
 
   if ( exists $param{tensions} ) {
     croak "tensions must be hash reference" if ref $param{tensions} ne 'HASH';
+    for my $i ( 0 .. 11 ) {
+      croak "tensions must include all intervals from 0 through 11"
+        if !exists $param{tensions}->{$i};
+    }
     $self->{_tensions} = $param{tensions};
   } else {
     # Default interval tentions taken from "Computer Models of Musical
@@ -61,40 +63,36 @@ sub new {
   return $self;
 }
 
-# TODO additional routines to consider rhythmic position/phrase
-# considerations (e.g. highest or lowest tension for a series of notes,
-# assuming a cadence, and "good enough" weighting if on or off The Beat.
-
-# Tension from each lowest note to all others above it in a passed pitch
-# set. Returns average, max, min, array ref of tensions. TODO might need
-# a better name.
+# Tension from first note to all others above it in a passed pitch set.
+# Returns sum, min, max, and array ref of tensions.
 sub pcs {
   my ( $self, $pset ) = @_;
   croak "pitch set must be array ref\n" unless ref $pset eq 'ARRAY';
-  croak "pitch set must contain something\n" if !@$pset;
+  croak "pitch set must contain multiple elements\n" if @$pset < 2;
   my @pcs = @$pset;
 
-  # Reposition pitches upwards if subsequent lower than the root (makes
-  # inversions more dissonant than root position chords, for one, and
-  # does the "right thing" with <c e g c> or qw/0 4 7 0/).
+  # Reposition pitches upwards if subsequent lower than the initial pitch
   for my $i ( 1 .. $#pcs ) {
-    while ( $pcs[$i] < $pcs[0] ) {
-      $pcs[$i] += $DEG_IN_SCALE;
+    if ( $pcs[$i] < $pcs[0] ) {
+      $pcs[$i] += $DEG_IN_SCALE +
+        ( int( ( $pcs[0] - $pcs[$i] - 1 ) / $DEG_IN_SCALE ) ) * $DEG_IN_SCALE;
     }
   }
 
-  my @tensions;
-  for my $i ( 0 .. $#pcs - 1 ) {
-    for my $j ( $i + 1 .. $#pcs ) {
-      push @tensions, $self->pitches( $pcs[$i], $pcs[$j] );
-    }
+  my $min = ~0;
+  my $max = 0;
+  my ( @tensions, $sum );
+  for my $j ( 1 .. $#pcs ) {
+    my $t = $self->pitches( $pcs[0], $pcs[$j] );
+    $sum += $t;
+    $min = $t if $t < $min;
+    $max = $t if $t > $max;
+    push @tensions, $t;
   }
 
-  return sum(@tensions) / @tensions, min(@tensions), max(@tensions),
-    \@tensions;
+  return $sum, $min, $max, \@tensions;
 }
 
-# TODO might need better name
 sub pitches {
   my ( $self, $p1, $p2 ) = @_;
   croak "two pitches required" if !defined $p1 or !defined $p2;
@@ -121,40 +119,75 @@ Music::Tension::Cope - tension analysis for 12 pitch material
 
 =head1 SYNOPSIS
 
-Beta interface! May be subject to change without notice!
+Beta interface! May change without notice!
 
   use Music::Tension;
   my $mtc = Music::Tension->new;
 
   my $tension = $mtc->pitches(4, 17);
-  my ( $t_avg, $t_min, $t_max, $t_ref ) = $mtc->pcs(qw/0 4 7/);
+  my ( $t_sum, $t_min, $t_max, $t_ref ) = $mtc->pcs(qw/0 4 7/);
 
 =head1 DESCRIPTION
 
-Music tension (how consonant or dissonant the pitches are) analysis of
-equal temperament intervals, David Cope style. The two methods (besides
-B<new> for blessings) are B<pitches> which accepts two integer pitches
-and returns the tension for them, and B<pcs>. B<pcs> is more
-complicated, accepting an array reference of pitches, and performs
-automatic octave adjustment (the pitches are assumed to be from lowest
-note to highest; should a pitch later in the list be lower than the
-previous pitch, it will be bumped up as many octaves as necessary)
-before tallying the tension on each lowest note with all higher notes in
-turn. This means chords such as <c dis e g> will have the minor 2nd in
-the middle counted, instead of just from c upwards, and that inversions
-will be ranked with higher tension than the root position chord (I <c e
-g> vs. I6 <e g c> vs. I64 <g c e>).
+This module performs tension analysis of equal temperament intervals,
+using the method outlined by David Cope in the text "Computer Models of
+Musical Creativity".
 
-B<pcs> currently ranks the 2nd inversion of the major triad as less
-tense than a 1st inversion of said traid, so that might bear looking
-into (overtone analysis to find how off-root what looks like the root
-is? but that would only work for triads, not non-triadic pitch sets).
+Tension values from this module may change between releases. Be sure to
+update all old tension values before starting any new analysis or
+composition. This may require storing the original intervals or pitch
+sets along with the tension numbers.
 
-B<pcs> calculates assuming closed position chords, and will move
-subsequent pitches up a register if they are below the first pitch,
-which is presumed to be the root:
+=head1 METHODS
+
+Any method may B<croak> if something is awry with the input.
+
+=over 4
+
+=item B<new> I<optional params>
+
+Constructor. Accepts optional I<tensions> and I<octave_adjust>
+parameters that specify alternate values instead of using the Cope-
+derived defaults. The I<tensions> hash reference must contain all
+intervals from (unison) to 11 (major seventh) inclusive, and the
+I<octave_adjust> a number to adjust intervals greater than an octave by.
+Intervals a single or multiple registers above the root will receive the
+same octave adjustment.
+
+  my $mtc = Music::Tension::Cope->new(
+    tensions      => { 0 => 0.42, 1 => 0.1, ... },
+    octave_adjust => 0.2,
+  );
+
+=item B<pcs> I<pitch set reference>
+
+B<pcs> accepts an array reference of pitches, and tallies tensions
+between the initial pitch to each subsequent. B<pcs> will first move
+subsequent pitches up a register if they are below the first pitch:
 
   <10 0 4 7> is considered as <10 12 16 19>
+
+Unisons with the initial pitch will not be adjusted upwards. Octaves
+below the initial pitch will be adjusted to unison. If the
+adjustments are a problem, ensure that the first pitch is the lowest
+of the pitch set.
+
+B<pcs> returns the tension, minimum tension, maximum tension, and a
+reference to a list of tensions for each interval.
+
+An alternative approach would be to perform tension checks on each pitch
+to any higher pitches, such that C<0 3 4 5> would also count the
+intervals present above the root (3 to 4, 3 to 5, and 4 to 5), instead
+of just the minor 3rd, major 3rd, and perfect fourth up from the root.
+An earlier version of this module did so, but the current code is trying
+to follow what Cope does as closely as possible.
+
+=item B<pitches> I<pitch1>, I<pitch2>
+
+Accepts two pitches, returns the tension of the interval formed between
+those two pitches.
+
+=back
 
 =head1 SEE ALSO
 
@@ -162,21 +195,11 @@ which is presumed to be the root:
 
 =item *
 
-"Computer Models of Musical Creativity", David Cope, 2005. ISBN
-0-262-03338-0. Tension values shamelessly lifted from this book.
+"Computer Models of Musical Creativity", David Cope, 2005, p.229-230.
 
 =item *
 
-Music::AtonalUtil
-
-=item *
-
-Music::Chord::Positions
-
-=item *
-
-"Theory of Harmony", Arnold Schoenberg, 1978. ISBN 978-0-520-26608-7.
-Chord positions, inversions, harmony basics.
+"The Craft of Musical Composition", Paul Hindemith, 1937.
 
 =back
 
@@ -189,7 +212,7 @@ Jeremy Mates, E<lt>jmates@cpan.orgE<gt>
 Copyright (C) 2012 by Jeremy Mates
 
 This library is free software; you can redistribute it and/or modify
-it under the same terms as Perl itself, either Perl version 5.14 or,
+it under the same terms as Perl itself, either Perl version 5.16 or,
 at your option, any later version of Perl 5 you may have available.
 
 =cut
