@@ -12,7 +12,7 @@ use Carp qw/croak/;
 use Scalar::Util qw/looks_like_number/;
 
 our @ISA     = qw(Music::Tension);    # but doesn't do anything right now
-our $VERSION = '0.50';
+our $VERSION = '0.51';
 
 my $DEG_IN_SCALE = 12;
 
@@ -86,7 +86,7 @@ sub approach {
   croak "pitch is required" if !defined $p1;
   croak "pitch must be integer" if $p1 !~ m/^-?\d+$/;
 
-  $self->pitches( 0, $p1 % $DEG_IN_SCALE );
+  $self->pitches( 0, abs($p1) % $DEG_IN_SCALE );
 }
 
 # Tension over durations
@@ -275,16 +275,24 @@ Cope; see the references below for the gory details.
 =item B<approach> I<pitch1>
 
 Presently a thin wrapper around B<pitches>, where I<pitch1> is relative
-to unison (0), and will be mapped to the same register. Used for
-horizontal tensions. Cope indicates this is for "root motions" which
-from the example provided appears to be the harmonic changes, not
-specific interval leaps, so tension of unison for a tonic extension,
-tension of fifth for I-V6-I stasis or trips up or down the circle of
-fifths, and so forth:
+to unison (0), and will be mapped to that register, regardless of sign
+or direction of the music. Used for horizontal tensions. Cope indicates
+this is for "root motions" which from the example provided appears to be
+the harmonic changes, not specific interval leaps, so tension of unison
+for a tonic extension, tension of fifth for I-V6-I stasis or trips up or
+down the circle of fifths, and so forth:
 
   $tension->approach( 0 );    # stasis (tonic -> tonic)
   $tension->approach( 5 );    # perfect fourth (tonic -> pre-dominant)
   $tension->approach( 7 );    # fifth (tonic -> dominant)
+
+Something else may be necessary to account for other root motions;
+Schoenberg (in "Theory of Harmony") favors rising fourths and falling
+thirds over the weaker falling fourth and rising thirds, and points out
+the weaker motions can be rectified over a longer phrase. Also relevant
+is whether the music is melodically rising or falling, and harmonically
+rising or falling (these can go in parallel or opposite directions,
+depending).
 
 =item B<duration> I<pitch_set_or_tension>, I<duration>
 
