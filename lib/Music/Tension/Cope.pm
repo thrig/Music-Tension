@@ -229,6 +229,19 @@ to update all old tension values before starting any new analysis or
 composition. This may require storing the original intervals or pitch
 sets along with the tension numbers.
 
+=head1 CAVEATS
+
+See http://www.pnas.org/content/early/2012/11/07/1207989109 (doi:
+10.1073/pnas.1207989109) - "The basis of musical consonance as revealed
+by congenital amusia" for more thoughts on consonance. This article in
+particular shows a control group (presumably Western) rating an
+augmented triad as less pleasant than a diminished triad, while the
+numbers in this module will rate an augmented triad as only slightly
+more tense than the major and minor triads, and well less tense than a
+diminished triad (due to the tritone present in that).
+
+Work by William Sethares should also be looked into.
+
 =head1 METHODS
 
 Any method may B<croak> if something is awry with the input.
@@ -371,12 +384,6 @@ formed between those two pitches.
 =item *
 
 L<App::MusicTools>
-
-=item *
-
-http://www.pnas.org/content/early/2012/11/07/1207989109 - "The basis of
-musical consonance as revealed by congenital amusia" for more thoughts
-on consonance.
 
 =item *
 
