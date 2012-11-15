@@ -374,6 +374,12 @@ L<App::MusicTools>
 
 =item *
 
+http://www.pnas.org/content/early/2012/11/07/1207989109 - "The basis of
+musical consonance as revealed by congenital amusia" for more thoughts
+on consonance.
+
+=item *
+
 "Computer Models of Musical Creativity", David Cope, 2005, p.229-235.
 
 =item *
