@@ -382,6 +382,10 @@ L<App::MusicTools>
 
 =item *
 
+"Theory of Harmony" by Arnold Schoenberg (ISBN 978-0-520-26608-7).
+
+=item *
+
 L<Music::Chord::Note>
 
 =back
