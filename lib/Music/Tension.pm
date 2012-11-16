@@ -21,7 +21,11 @@ Music::Tension - music tension analysis
 
 =head1 DESCRIPTION
 
-Music tension analysis; just L<Music::Tension::Cope> for now.
+Music tension (consonance) analysis; just L<Music::Tension::Cope> for
+now.
+
+Work by William Sethares should also be looked into, for example
+http://sethares.engr.wisc.edu/consemi.html
 
 =head1 AUTHOR
 

@@ -240,7 +240,8 @@ numbers in this module will rate an augmented triad as only slightly
 more tense than the major and minor triads, and well less tense than a
 diminished triad (due to the tritone present in that).
 
-Work by William Sethares should also be looked into.
+Work by William Sethares should also be looked into, for example
+http://sethares.engr.wisc.edu/consemi.html
 
 =head1 METHODS
 
