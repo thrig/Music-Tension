@@ -40,9 +40,8 @@ sub freq2pitch {
     if !looks_like_number $freq
       or $freq < 0;
 
-  return
-    int(
-    69 + 12 * ( log( $freq / $self->{_reference_frequency} ) / log(2) ) );
+  return sprintf "%.0f",
+    69 + 12 * ( log( $freq / $self->{_reference_frequency} ) / log(2) );
 }
 
 sub pitch2freq {
@@ -126,8 +125,11 @@ frequency use by the frequency/pitch conversion calls (440 by default).
 
 =item B<freq2pitch> I<frequency>
 
-Given a frequency (Hz), returns the pitch number (which might also be a
-MIDI number, unless that range is execeeded somehow).
+Given a frequency (Hz), returns the integer pitch number (which might
+also be a MIDI number, unless that range is execeeded somehow).
+Fractional pitch results are rounded to the nearest pitch number. (I'm
+not sure if the standard practice is to round or truncate the
+conversion, so I guessed to round.)
 
 =item B<pitch2freq> I<pitch>
 
