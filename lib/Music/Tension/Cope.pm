@@ -12,7 +12,7 @@ use Carp qw/croak/;
 use Scalar::Util qw/looks_like_number/;
 
 our @ISA     = qw(Music::Tension);    # but doesn't do anything right now
-our $VERSION = '0.51';
+our $VERSION = '0.52';
 
 my $DEG_IN_SCALE = 12;
 
@@ -184,8 +184,8 @@ Music::Tension::Cope - tension analysis for equal temperament music
 
 Beta interface! Has and will change without notice!
 
-  use Music::Tension;
-  my $tension = Music::Tension->new;
+  use Music::Tension::Cope;
+  my $tension = Music::Tension::Cope->new;
 
   my $value = $tension->pitches(4, 17);
 
@@ -239,9 +239,6 @@ augmented triad as less pleasant than a diminished triad, while the
 numbers in this module will rate an augmented triad as only slightly
 more tense than the major and minor triads, and well less tense than a
 diminished triad (due to the tritone present in that).
-
-Work by William Sethares should also be looked into, for example
-http://sethares.engr.wisc.edu/consemi.html
 
 =head1 METHODS
 
@@ -384,7 +381,8 @@ formed between those two pitches.
 
 =item *
 
-L<App::MusicTools>
+L<App::MusicTools> - command line music composition and analysis tools
+that make use of this module.
 
 =item *
 
@@ -392,15 +390,20 @@ L<App::MusicTools>
 
 =item *
 
-"The Craft of Musical Composition", Paul Hindemith, 1942. (4th edition)
+"The Craft of Musical Composition", Paul Hindemith, 1942.
 
 =item *
 
-"Theory of Harmony" by Arnold Schoenberg (ISBN 978-0-520-26608-7).
+"Theory of Harmony", Arnold Schoenberg, 1983.
 
 =item *
 
-L<Music::Chord::Note>
+L<Music::Chord::Note> - obtain pitch sets for common chord names.
+
+=item *
+
+L<Music::Tension::PlompLevelt> - alternative tension algorithm based on
+work of William Sethares.
 
 =back
 
