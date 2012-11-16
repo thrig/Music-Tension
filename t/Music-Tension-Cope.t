@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 22;
+use Test::More tests => 23;
 BEGIN { use_ok('Music::Tension::Cope') }
 
 my $mt = Music::Tension::Cope->new;
@@ -25,6 +25,9 @@ is( $mt->pitches( 0, 25 ), 0.98, 'minor 2nd +8va*2 tension' );
 # approach mostly just calls ->pitches(0, x)
 is( $mt->approach(0), 0,   'unison approach tension' );
 is( $mt->approach(7), 0.1, 'fifth approach tension' );
+
+# frequencies just maps to equal temperament then calls pitches
+is( $mt->frequencies( 261.6, 440 ), 0.25, 'major 6th via frequencies' );
 
 # vertical depends on ->pitches working
 is_deeply(

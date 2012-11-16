@@ -113,6 +113,19 @@ sub duration {
     $self->{_duration_weight} * $tension;
 }
 
+# KLUGE things into whatever is closest equal temperament for now
+sub frequencies {
+  my ( $self, $f1, $f2 ) = @_;
+  croak "two frequencies required" if !defined $f1 or !defined $f2;
+  croak "frequencies must be positive numbers"
+    if !looks_like_number $f1
+      or !looks_like_number $f2
+      or $f1 < 0
+      or $f2 < 0;
+
+  $self->pitches( map $self->freq2pitch($_), $f1, $f2 );
+}
+
 # Tension based on where note is within measure p.232 [Cope 2005]
 sub metric {
   my ( $self, $b, $v ) = @_;
