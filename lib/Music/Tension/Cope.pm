@@ -338,6 +338,15 @@ The duration tension may also need adjustment depending on how well the
 instrument involved sustains; consider a xylophone vs. a piano vs. a
 piano with the sustain pedal down vs. a church organ.
 
+=item B<frequencies> I<f1>, I<f2>
+
+Calculates tension between two given frequencies (Hz), via crude
+conversion of the frequencies to whatever-are-the-closest MIDI pitch
+numbers, and then calling B<pitches> on those pitches. Mostly for
+interface compatibility with L<Music::Tension::PlompLevelt>; presumably
+could be replaced with mathematical expression Cope uses to avoid the
+kluge-to-MIDI-pitch-numbers?
+
 =item B<metric> I<beat_number>, I<beat_value>
 
 Tension calculation based on the position in a measure. The beat number
