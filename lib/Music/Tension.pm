@@ -1,6 +1,5 @@
-# TODO so this would be the parent class, if other methods of analyzing
-# tension were to be added, but do not know what all shared methods
-# would be offered between such modules...
+# Parent class for music tension analysis modules. Well, not much of
+# one, anyways.
 
 package Music::Tension;
 
@@ -8,9 +7,52 @@ use 5.010000;
 use strict;
 use warnings;
 
+use Carp qw/croak/;
+use Scalar::Util qw/looks_like_number/;
+
 our @ISA = qw();
 
-our $VERSION = '0.51';
+our $VERSION = '0.60';
+
+########################################################################
+#
+# SUBROUTINES
+
+sub new {
+  my ( $class, %param ) = @_;
+  my $self = {};
+
+  if ( exists $param{reference_frequency} ) {
+    croak "reference_frequency must be a number"
+      if !looks_like_number $param{reference_frequency};
+    $self->{_reference_frequency} = $param{reference_frequency};
+  } else {
+    $self->{_reference_frequency} = 440;
+  }
+
+  bless $self, $class;
+  return $self;
+}
+
+sub freq2pitch {
+  my ( $self, $freq ) = @_;
+  croak "frequency must be a positive number"
+    if !looks_like_number $freq
+      or $freq < 0;
+
+  return
+    int(
+    69 + 12 * ( log( $freq / $self->{_reference_frequency} ) / log(2) ) );
+}
+
+sub pitch2freq {
+  my ( $self, $pitch ) = @_;
+  croak "pitch must be MIDI number"
+    if !looks_like_number $pitch
+      or $pitch < 0;
+
+  return $self->{_reference_frequency} * ( 2**( ( $pitch - 69 ) / 12 ) );
+}
 
 1;
 __END__
@@ -19,13 +61,91 @@ __END__
 
 Music::Tension - music tension analysis
 
+=head1 SYNOPSIS
+
+Beta interface! Has and will change without notice!
+
+  my $t = Music::Tension;
+  $t->pitch2freq(60);
+  $t->freq2pitch(440);
+
+
+  my $ct = Music::Tension::Cope;
+  $ct->... # see that module for details
+
+  my $plt = Music::Tension::PlompLevelt;
+  $plt->... # see that module for details
+
 =head1 DESCRIPTION
 
-Music tension (consonance) analysis; just L<Music::Tension::Cope> for
-now.
+Music tension analysis. This module merely provides pitch and frequency
+conversion routines. The other modules under this distribution provide
+various algorithms that produce a number for how consonant or dissonant
+a chord or other musical events are, presumably for use in musical
+analysis or composition.
 
-Work by William Sethares should also be looked into, for example
-http://sethares.engr.wisc.edu/consemi.html
+The numbers produced by one module can only be used in comparison with
+other musical events calculated by the same module; no attempt has been
+made to correlate the output of any overlapping methods between the
+different modules.
+
+=head2 SUB-MODULES
+
+If you have ideas for a new tension analysis module, please let me know,
+so it can be included in this distribution, or locate it outside of the
+C<Music::Tension::*> space.
+
+=over 4
+
+=item *
+
+L<Music::Tension::Cope> - methods outlined in "Computer Models of
+Musical Creativity" by David Cope, including routines for specific
+pitches, verticals (chords), metric position, and other factors.
+
+=item *
+
+L<Music::Tension::PlompLevelt> - Plomp-Levelt consonance curve
+calculations based on writings and code by William Sethares. For pitches
+and frequencies in vertical relationships.
+
+=back
+
+=head1 METHODS
+
+Any method may B<croak> if something is awry with the input.
+
+=over 4
+
+=item B<new> I<optional params>
+
+Constructor. Accepts an optional parameter to change the reference
+frequency use by the frequency/pitch conversion calls (440 by default).
+
+  my $t = Music::Tension->new(reference_frequency => 442);
+
+=item B<freq2pitch> I<frequency>
+
+Given a frequency (Hz), returns the pitch number (which might also be a
+MIDI number, unless that range is execeeded somehow).
+
+=item B<pitch2freq> I<pitch>
+
+Given a pitch number (a positive integer, perhaps from the MIDI numbers
+range), returns the frequency (Hz).
+
+=back
+
+=head1 SEE ALSO
+
+=over 4
+
+=item *
+
+http://en.wikipedia.org/wiki/Pitch_%28music%29 was the source of the
+pitch/frequency conversion equations.
+
+=back
 
 =head1 AUTHOR
 
