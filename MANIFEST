@@ -4,6 +4,8 @@ README
 eg/calc-forte-tensions
 lib/Music/Tension.pm
 lib/Music/Tension/Cope.pm
+lib/Music/Tension/PlompLevelt.pm
 t/Music-Tension-Cope.t
+t/Music-Tension-PlompLevelt.t
 t/Music-Tension.t
 t/pod.t
