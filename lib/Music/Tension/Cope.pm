@@ -9,10 +9,11 @@ use strict;
 use warnings;
 
 use Carp qw/croak/;
+use Music::Tension ();
 use Scalar::Util qw/looks_like_number/;
 
-our @ISA     = qw(Music::Tension);    # but doesn't do anything right now
-our $VERSION = '0.52';
+our @ISA     = qw(Music::Tension);
+our $VERSION = '0.60';
 
 my $DEG_IN_SCALE = 12;
 
@@ -22,7 +23,7 @@ my $DEG_IN_SCALE = 12;
 
 sub new {
   my ( $class, %param ) = @_;
-  my $self = {};
+  my $self = $class->SUPER::new(%param);
 
   if ( exists $param{duration_weight} ) {
     croak "duration_weight must be a number"
@@ -124,6 +125,24 @@ sub metric {
   return ( $b * $self->{_metric_weight} ) / $v;
 }
 
+# Tension for two pitches
+sub pitches {
+  my ( $self, $p1, $p2 ) = @_;
+  croak "two pitches required" if !defined $p1 or !defined $p2;
+  croak "pitches must be integers"
+    if $p1 !~ m/^-?\d+$/
+      or $p2 !~ m/^-?\d+$/;
+
+  my $interval = abs( $p2 - $p1 );
+  my $octave   = int( $interval / $DEG_IN_SCALE );
+  my $tension =
+    $self->{_tensions}->{ $interval % $DEG_IN_SCALE } +
+    ( $octave > 0 ? $self->{_octave_adjust} : 0 );
+  $tension = 0 if $tension < 0;
+
+  return $tension;
+}
+
 # Tension from first note to all others above it in a passed pitch set.
 # Returns sum, min, max, and array ref of tensions, unless just the sum
 # is desired by context.
@@ -153,24 +172,6 @@ sub vertical {
   }
 
   return wantarray ? ( $sum, $min, $max, \@tensions ) : $sum;
-}
-
-# Tension for two pitches
-sub pitches {
-  my ( $self, $p1, $p2 ) = @_;
-  croak "two pitches required" if !defined $p1 or !defined $p2;
-  croak "pitches must be integers"
-    if $p1 !~ m/^-?\d+$/
-      or $p2 !~ m/^-?\d+$/;
-
-  my $interval = abs( $p2 - $p1 );
-  my $octave   = int( $interval / $DEG_IN_SCALE );
-  my $tension =
-    $self->{_tensions}->{ $interval % $DEG_IN_SCALE } +
-    ( $octave > 0 ? $self->{_octave_adjust} : 0 );
-  $tension = 0 if $tension < 0;
-
-  return $tension;
 }
 
 1;
@@ -242,7 +243,8 @@ diminished triad (due to the tritone present in that).
 
 =head1 METHODS
 
-Any method may B<croak> if something is awry with the input.
+Any method may B<croak> if something is awry with the input. Methods are
+inherited from the parent class, L<Music::Tension>.
 
 =over 4
 

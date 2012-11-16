@@ -1,5 +1,4 @@
-# Parent class for music tension analysis modules. Well, not much of
-# one, anyways.
+# Parent class for music tension analysis modules.
 
 package Music::Tension;
 
@@ -9,8 +8,6 @@ use warnings;
 
 use Carp qw/croak/;
 use Scalar::Util qw/looks_like_number/;
-
-our @ISA = qw();
 
 our $VERSION = '0.60';
 
@@ -112,7 +109,8 @@ and frequencies in vertical relationships.
 
 =head1 METHODS
 
-Any method may B<croak> if something is awry with the input.
+Any method may B<croak> if something is awry with the input. These
+methods are inherited by the sub-modules.
 
 =over 4
 
