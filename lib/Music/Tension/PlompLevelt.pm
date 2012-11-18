@@ -21,6 +21,8 @@ our $VERSION = '0.01';
 #
 # TODO link these to something in new() for default harmonic amps, if
 # generating those?
+#
+# TODO scale these so range from 0..1?
 my %AMPLITUDES = (
   'pianowire-plucked' => [ 1, 0.8, 0.6, 0.3, 0.1, 0.03 ],
   'pianowire-soft'    => [ 1, 1.9, 1.1, 0.2, 0,   0.05 ],
@@ -190,6 +192,10 @@ On the plus side, this method does rate an augmented triad as more
 dissonant than a diminished triad (though that test was with distortions
 from equal temperament), which agrees with a study mentioned over in
 L<Music::Tension::Cope> that the Cope method finds the opposite of.
+
+See also "Harmony Perception: Harmoniousness is more than the sum of
+interval consonance" by Norman Cook (2009) though that should probably
+be in a different module than this one.
 
 =head1 METHODS
 
