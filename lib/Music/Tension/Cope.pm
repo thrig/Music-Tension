@@ -215,9 +215,6 @@ Beta interface! Has and will change without notice!
 
 =head1 DESCRIPTION
 
-Parsing music into a form suitable for use by this module and practical
-uses of the results are left as an exercise to the reader.
-
 This module offers tension analysis of equal temperament 12-pitch music,
 using the method outlined by David Cope in the text "Computer Models of
 Musical Creativity". The various methods will calculate the tension of
@@ -242,6 +239,9 @@ Tension results may change between releases due to code changes. Be sure
 to update all old tension values before starting any new analysis or
 composition. This may require storing the original intervals or pitch
 sets along with the tension numbers.
+
+Parsing music into a form suitable for use by this module and practical
+uses of the results are left as an exercise to the reader.
 
 =head1 CAVEATS
 
