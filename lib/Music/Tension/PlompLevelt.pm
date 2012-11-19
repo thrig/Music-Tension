@@ -9,21 +9,18 @@ use strict;
 use warnings;
 
 use Carp qw/croak/;
+use List::Util qw/sum/;
 use Music::Tension ();
 use Scalar::Util qw/looks_like_number/;
 
 our @ISA     = qw(Music::Tension);
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
-# [Helmholtz 1877 p.79] relative intensity of first six harmonics of
-# piano wire, struck at 1/7th its length, for various hammer types. Via
-# http://jjensen.org/DissonanceCurve.html
-#
-# TODO link these to something in new() for default harmonic amps, if
-# generating those?
-#
-# TODO scale these so range from 0..1?
+# pianowire* are from [Helmholtz 1877 p.79] relative intensity of first
+# six harmonics of piano wire, struck at 1/7th its length, for various
+# hammer types. Via http://jjensen.org/DissonanceCurve.html
 my %AMPLITUDES = (
+  'ones' => [ (1) x 6 ],
   'pianowire-plucked' => [ 1, 0.8, 0.6, 0.3, 0.1, 0.03 ],
   'pianowire-soft'    => [ 1, 1.9, 1.1, 0.2, 0,   0.05 ],
   'pianowire-medium'  => [ 1, 2.9, 3.6, 2.6, 1.1, 0.2 ],
@@ -38,7 +35,34 @@ sub new {
   my ( $class, %param ) = @_;
   my $self = $class->SUPER::new(%param);
 
-  # TODO means to specify harmonics or whatnot here?
+  $self->{_amplitudes} = {%AMPLITUDES};
+
+  if ( exists $param{amplitudes} ) {
+    for my $name ( keys %{ $param{amplitudes} } ) {
+      croak "amplitude profile '$name' must be array reference"
+        unless ref $param{amplitudes}->{$name} eq 'ARRAY';
+      $self->{_amplitudes}->{$name} = $param{amplitudes}->{$name};
+    }
+  }
+
+  if ( exists $param{default_amp_profile} ) {
+    croak "no such profile '$param{default_amp_profile}'"
+      unless exists $self->{_amplitudes}->{ $param{default_amp_profile} };
+    $self->{_amp_profile} = $param{default_amp_profile};
+  } else {
+    $self->{_amp_profile} = 'pianowire-medium';
+  }
+
+  # NOTE will also need normalize if add setter method to update _amplitudes
+  $self->{_normalize_amps} = exists $param{normalize_amps} ? 1 : 0;
+  if ( $self->{_normalize_amps} ) {
+    for my $amps ( values %{ $self->{_amplitudes} } ) {
+      my $sum = sum @$amps;
+      for my $amp (@$amps) {
+        $amp /= $sum;
+      }
+    }
+  }
 
   bless $self, $class;
   return $self;
@@ -50,51 +74,52 @@ sub new {
 # sets of overtones), how dissonant are they to one another" so
 # hopefully I can just tally up the harmonics between the two different
 # sets of harmonics?
+#
+# Also, vertical scaling might take more looking at, perhaps arrange so
+# with normalize_amps the maximum dissonance has the value of 1? (or
+# that the most dissonant interval of the scale, e.g. minor 2nd in equal
+# temperament has the value of one?)
 sub frequencies {
   my ( $self, $f1, $f2 ) = @_;
   my @harmonics;
 
-  # TODO these should be built from callback or some new() param (new()
-  # could also have some means to specify the amplitude sets)
   if ( looks_like_number $f1) {
-    $harmonics[0] = [
-      { amp => 1,   freq => $f1 },
-      { amp => 2.9, freq => $f1 * 2 },
-      { amp => 3.6, freq => $f1 * 3 },
-      { amp => 2.6, freq => $f1 * 4 },
-      { amp => 1.1, freq => $f1 * 5 },
-      { amp => 0.2, freq => $f1 * 6 },
-    ];
-  } elsif ( ref $f1 eq 'ARRAY' ) {
+    for my $i ( 0 .. $#{ $self->{_amplitudes}->{ $self->{_amp_profile} } } ) {
+      push @{ $harmonics[0] },
+        {
+        amp => $self->{_amplitudes}->{ $self->{_amp_profile} }->[$i] || 0,
+        freq => $f1 * ( $i + 1 ),
+        };
+    }
+  } elsif ( ref $f1 eq 'ARRAY' and @$f1 and ref $f1->[0] eq 'HASH' ) {
     $harmonics[0] = $f1;
   } else {
     croak "unknown input for frequency1";
   }
   if ( looks_like_number $f2) {
-    $harmonics[1] = [
-      { amp => 1,   freq => $f2 },
-      { amp => 2.9, freq => $f2 * 2 },
-      { amp => 3.6, freq => $f2 * 3 },
-      { amp => 2.6, freq => $f2 * 4 },
-      { amp => 1.1, freq => $f2 * 5 },
-      { amp => 0.2, freq => $f2 * 6 },
-    ];
-  } elsif ( ref $f2 eq 'ARRAY' ) {
+    for my $j ( 0 .. $#{ $self->{_amplitudes}->{ $self->{_amp_profile} } } ) {
+      push @{ $harmonics[1] },
+        {
+        amp => $self->{_amplitudes}->{ $self->{_amp_profile} }->[$j] || 0,
+        freq => $f2 * ( $j + 1 ),
+        };
+    }
+  } elsif ( ref $f2 eq 'ARRAY' and @$f2 and ref $f2->[0] eq 'HASH' ) {
     $harmonics[1] = $f2;
   } else {
-    croak "unknown input for frequency1";
+    croak "unknown input for frequency2";
   }
 
   # code ported from equation at http://jjensen.org/DissonanceCurve.html
   my $tension;
   for my $i ( 0 .. $#{ $harmonics[0] } ) {
     for my $j ( 0 .. $#{ $harmonics[1] } ) {
-      my @freqs = sort { $a <=> $b } $harmonics[0][$i]{freq},
-        $harmonics[1][$j]{freq};
-      my $q = ( $freqs[1] - $freqs[0] ) / ( 0.0207 * $freqs[0] + 18.96 );
+      my @freqs = sort { $a <=> $b } $harmonics[0]->[$i]{freq},
+        $harmonics[1]->[$j]{freq};
+      my $q = ( $freqs[1] - $freqs[0] ) / ( 0.021 * $freqs[0] + 19 );
       $tension +=
-        $harmonics[0][$i]{amp} *
-        $harmonics[1][$j]{amp} *
+        $harmonics[0]->[$i]{amp} *
+        $harmonics[1]->[$j]{amp} *
         ( exp( -0.84 * $q ) - exp( -1.38 * $q ) );
     }
   }
@@ -159,23 +184,30 @@ Beta interface! Will likely change without notice!
 =head1 DESCRIPTION
 
 Plomp-Levelt consonance curve calculations based on work by William
-Sethares and others (L<"SEE ALSO"> for links). The calculations use the
-harmonics (the fundamental plus some number of overtones above that).
-The relative intensity of these harmonics vary by instrument and how the
-instrument is played; some instruments have partials that line up with
-the even harmonic numbers (strings), others that favor the odd harmonic
-numbers (clarinet), and still others show more complicated relationships
-(percussion). Finding details on the harmonics may require consulting a
-book, or performing spectral analysis (e.g. via Audacity) on recordings
-of a particular instrument, or fiddling around with a synthesizer.
+Sethares and others (L<"SEE ALSO"> for links).
+
+Parsing music into a form suitable for use by this module and practical
+uses of the results are left as an exercise to the reader.
+
+=head2 TERMINIOLOGY
+
+The calculations use the harmonics--the fundamental plus some number of
+overtones above that--the first six by default. Finding details on the
+harmonics for a particular instrument may require consulting a book, or
+performing spectral analysis on recordings of a particular instrument
+(e.g. via Audacity), or fiddling around with a synthesizer, and likely
+making simplifying assumptions on what gets fed into this module.
+
+  | Harmonics ...                  
+  |-----------------------------------
+  | Fundamental | Overtones
+  | c           | c' g' c'' e'' ...
 
 The critical band is considered to be about a minor 3rd, or about 6/5 of
 the frequency, though this expands to perhaps a major 3rd for lower
 frequencies. (Hence composers favoring larger, more consonant intervals
-in the bass?)
-
-Parsing music into a form suitable for use by this module and practical
-uses of the results are left as an exercise to the reader.
+in the bass?) Maximum dissonance is found at a location studied by
+Plomp, Levelt, and others.
 
 =head1 CAVEATS
 
@@ -186,7 +218,7 @@ is not impressed by partials as such. The faculty--the prime faculty--of
 the ear is the perception of small-numbered intervals, 2/1, 3/2, 4/3,
 etc. and the ear cares not a whit whether these intervals are in or out
 of the overtone series." (Genesis of a Music, 1947). (However, note that
-this rant predates the work by Sethares and others.)
+this declamation predates the work by Sethares and others.)
 
 On the plus side, this method does rate an augmented triad as more
 dissonant than a diminished triad (though that test was with distortions
@@ -194,8 +226,8 @@ from equal temperament), which agrees with a study mentioned over in
 L<Music::Tension::Cope> that the Cope method finds the opposite of.
 
 See also "Harmony Perception: Harmoniousness is more than the sum of
-interval consonance" by Norman Cook (2009) though that should probably
-be in a different module than this one.
+interval consonance" by Norman Cook (2009) though that method should
+probably be in a different module than this one.
 
 =head1 METHODS
 
@@ -211,31 +243,68 @@ The tension number depends heavily on the equation (and constants to
 said equation), and should not be considered comparable to any other
 tension modules in this distribution, and only to other tension values
 from this module if the same harmonics were used in all calculations.
+Also, the tension numbers could very easily change between releases of
+this module.
 
 =over 4
 
 =item B<new> I<optional params>
 
-Constructor. Accepts an optional parameter to change the
-reference frequency use by the pitch to frequency conversion
-calls (440 by default).
+Constructor. Accepts various optional parameters.
 
-  Music::Tension::PlompLevelt->new(reference_frequency => 442);
+  my $tension = Music::Tension::PlompLevelt->new(
+    amplitudes => {
+      made_up_numbers => [ 42, 42, ... ],
+      ...
+    },
+    default_amp_profile => 'made_up_numbers',
+    normalize_amps      => 1,
+    reference_frequency => 442,
+  );
+
+=over 4
+
+=item *
+
+I<amplitudes> specifies a hash reference that should contain
+named amplitude sets and an array reference of amplitude values
+for each harmonic.
+
+=item *
+
+I<default_amp_profile> what amplitude profile to use by default.
+
+=item *
+
+I<normalize_amps> if true, normalizes the amplitude values such that
+they sum up to one.
+
+=item *
+
+I<reference_frequency> sets the MIDI reference frequency, by default 440
+(Hz). Used by B<pitch2freq> conversion called by the B<pitches> and
+B<vertical> methods.
+
+=back
 
 =item B<frequencies> I<freq_or_ref1>, I<freq_or_ref2>
 
 Method that accepts two frequencies, or two array references containing
 the harmonics and amplitudes of such. Returns tension as a number.
 
-  # default harmonics will be filled in for five overtones (currently
-  # Helmholtz amplitudes for piano wire, medium hammer, etc)
+  # default harmonics will be filled in
   $tension->frequencies(440, 880);
 
   # custom harmonics
   $tension->frequencies(
-    [ {amp=>1,    freq=>440}, {amp=>0.5,  freq=>880}  ],
-    [ {amp=>0.88, freq=>880}, {amp=>0.44, freq=>1760} ]
+    [ {amp=>1,    freq=>440}, {amp=>0.5,  freq=>880},  ... ],
+    [ {amp=>0.88, freq=>880}, ... ],
+    ...
   );
+
+The harmonics need not be the same number, nor use the same frequencies
+nor amplitudes. This in theory allows comparison of instruments with
+different harmonic profiles.
 
 =item B<pitches> I<pitch1>, I<pitch2>
 
@@ -248,8 +317,8 @@ is involved. Returns tension as a number.
 =item B<vertical> I<pitch_set>
 
 Given a pitch set (an array reference of integer pitch numbers that are
-ideally MIDI not numbers), converts those pitches to frequencies via
-B<pitch2freq> then calls B<frequencies> for the first pitch compared in
+ideally MIDI numbers), converts those pitches to frequencies via
+B<pitch2freq>, then calls B<frequencies> for the first pitch compared in
 turn with each subsequent in the set. Returns tension as a number.
 
 =back
@@ -271,6 +340,10 @@ by William Sethares. Also http://sethares.engr.wisc.edu/comprog.html
 
 "Music: A Mathematical Offering", David Benson, 2008. (Chapter 4)
 http://homepages.abdn.ac.uk/mth192/pages/html/maths-music.html
+
+=item *
+
+L<Music::Chord::Note> - obtain pitch sets for common chord names.
 
 =item *
 
