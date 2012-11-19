@@ -59,31 +59,31 @@ Music::Tension - music tension analysis
 
 =head1 SYNOPSIS
 
-Beta interface! Has and will change without notice!
+Beta interface! May change without notice!
 
-  my $t = Music::Tension;
+  my $t = Music::Tension ();
   $t->pitch2freq(60);
   $t->freq2pitch(440);
 
 
-  my $ct = Music::Tension::Cope;
+  my $ct = Music::Tension::Cope ();
   $ct->... # see that module for details
 
-  my $plt = Music::Tension::PlompLevelt;
+  my $plt = Music::Tension::PlompLevelt ();
   $plt->... # see that module for details
 
 =head1 DESCRIPTION
 
-Music tension analysis. This module merely provides pitch and frequency
-conversion routines. The other modules under this distribution provide
-various algorithms that produce a number for how consonant or dissonant
-a chord or other musical events are, presumably for use in musical
-analysis or composition.
+Music tension (dissonance) analysis. This module merely provides pitch
+and frequency conversion routines. The other modules under this
+distribution provide various algorithms that produce a number for how
+consonant or dissonant a chord or other musical events are, presumably
+for use in musical analysis or composition.
 
 The numbers produced by one module can only be used in comparison with
 other musical events calculated by the same module; no attempt has been
 made to correlate the output of any overlapping methods between the
-different modules.
+different modules. (Though comparisons may be interesting.)
 
 =head2 SUB-MODULES
 
@@ -102,8 +102,8 @@ pitches, verticals (chords), metric position, and other factors.
 =item *
 
 L<Music::Tension::PlompLevelt> - Plomp-Levelt consonance curve
-calculations based on writings and code by William Sethares. For pitches
-and frequencies in vertical relationships.
+calculations based on writings and code by William Sethares, among
+others. For frequencies (and pitches) in vertical relationships.
 
 =back
 
