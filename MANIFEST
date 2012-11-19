@@ -2,6 +2,7 @@ MANIFEST
 Makefile.PL
 README
 eg/calc-forte-tensions
+eg/gen-pl-nums
 lib/Music/Tension.pm
 lib/Music/Tension/Cope.pm
 lib/Music/Tension/PlompLevelt.pm

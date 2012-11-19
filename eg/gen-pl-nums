@@ -1,0 +1,33 @@
+#!/usr/bin/env perl
+#
+# Generates tension data over a range of frequencies. For example:
+#
+#   $ perl -- gen-pl-nums --start=440 --end=880 > blah
+#   $ R
+#   > diss=read.table('blah')
+#   > names(diss)=c('frequency','diss')
+#   > max(diss$diss)
+#   [1] 5.46
+#   > plot(diss,type='l')
+
+use strict;
+use warnings;
+
+use Getopt::Long qw(GetOptions);
+use Music::Tension::PlompLevelt ();
+
+# TODO could allow custom amplitudes to be passed in, etc.
+GetOptions(
+  'end=i'   => \my $end_freq,
+  'start=i' => \my $start_freq,
+) or die "invalid options\n";
+die "start must be lower than end"
+  if !defined $start_freq
+    or !defined $end_freq
+    or $start_freq > $end_freq;
+
+my $tension = Music::Tension::PlompLevelt->new();
+
+for ( my $f = $start_freq; $f <= $end_freq; $f += 0.2 ) {
+  printf "%.1f %.3f\n", $f, $tension->frequencies( $start_freq, $f );
+}
