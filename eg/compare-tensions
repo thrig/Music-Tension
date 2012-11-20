@@ -1,0 +1,42 @@
+#!/usr/bin/env perl
+#
+# Generate tensions for various pitches using both Cope and Plomp-Levelt
+# methods, presumably for comparison elsewhere. The Plomp-Levelt numbers
+# will likely need scaling for better comparison with those from Cope.
+# Alternative: generate the P-L numbers for a range of frequencies, then
+# put that graph on top of the discrete Cope points.
+#
+# Also interesting might be lower pitches (e.g. 38, something near the
+# bottom of the double bass range), as Plomp-Levelt behaves differently
+# there, as well as different amplitude profiles.
+
+use strict;
+use warnings;
+
+use File::Basename qw/basename/;
+use Music::Tension::Cope        ();
+use Music::Tension::PlompLevelt ();
+
+my $Prog_Name = basename($0);
+
+my @Tension_Obj = (
+  { name => 'cope', obj => Music::Tension::Cope->new, },
+  { name => 'pllt', obj => Music::Tension::PlompLevelt->new },
+  # see Music/Tension/PlompLevelt.pm for available options
+  #{ name => 'pllt-plucked',
+  #  obj  => Music::Tension::PlompLevelt->new(
+  #    default_amp_profile => 'pianowire-plucked'
+  #  )
+  #},
+);
+
+my $base_pitch = 60;
+for my $o (@Tension_Obj) {
+  open my $fh, '>', $o->{name} . ".out"
+    or die "$Prog_Name: could not write output file '"
+    . $o->{name}
+    . ".out': $!\n";
+  for my $pitch ( $base_pitch .. $base_pitch + 12 * 2 ) {
+    printf $fh "%d %.3f\n", $pitch, $o->{obj}->pitches( $base_pitch, $pitch );
+  }
+}
