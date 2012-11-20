@@ -273,6 +273,15 @@ for each harmonic.
 =item *
 
 I<default_amp_profile> what amplitude profile to use by default.
+Available options pre-coded into the module include:
+
+  ones
+  pianowire-plucked
+  pianowire-soft
+  pianowire-medium    * the default
+  pianowire-hard
+
+These all have amplitude values for six harmonics.
 
 =item *
 
