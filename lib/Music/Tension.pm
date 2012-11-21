@@ -9,7 +9,7 @@ use warnings;
 use Carp qw/croak/;
 use Scalar::Util qw/looks_like_number/;
 
-our $VERSION = '0.60';
+our $VERSION = '0.61';
 
 ########################################################################
 #
