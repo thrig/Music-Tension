@@ -22,8 +22,8 @@ my $amp_profile = 'pianowire-medium';
 GetOptions(
   'amp=s'   => \$amp_profile,
   'camp=s'  => \my $custom_amp_profile,
-  'end=i'   => \my $end_freq,
-  'start=i' => \my $start_freq,
+  'end=f'   => \my $end_freq,
+  'start=f' => \my $start_freq,
 ) or die "invalid options\n";
 
 die "start must be lower than end"
