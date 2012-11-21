@@ -14,7 +14,7 @@ use Music::Tension ();
 use Scalar::Util qw/looks_like_number/;
 
 our @ISA     = qw(Music::Tension);
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 
 # pianowire* are from [Helmholtz 1877 p.79] relative intensity of first
 # six harmonics of piano wire, struck at 1/7th its length, for various
@@ -184,30 +184,35 @@ Beta interface! Will likely change without notice!
 =head1 DESCRIPTION
 
 Plomp-Levelt consonance curve calculations based on work by William
-Sethares and others (L<"SEE ALSO"> for links).
+Sethares and others (L<"SEE ALSO"> for links). None of this will make
+sense without some grounding in music theory and the referenced papers.
 
 Parsing music into a form suitable for use by this module and practical
-uses of the results are left as an exercise to the reader.
+uses of the results are left as an exercise to the reader. Consult the
+C<eg/> directory of this module's distribution for example programs.
 
 =head2 TERMINIOLOGY
 
-The calculations use the harmonics--the fundamental plus some number of
-overtones above that--the first six by default. Finding details on the
-harmonics for a particular instrument may require consulting a book, or
-performing spectral analysis on recordings of a particular instrument
-(e.g. via Audacity), or fiddling around with a synthesizer, and likely
-making simplifying assumptions on what gets fed into this module.
+      Fundamental        Overtones
+  Harmonic      1        2       3       4       5       6       7
+    partials
+      odds      o                o               o               o
+      evens              e               e               e
 
-  | Harmonics ...                  
-  |-----------------------------------
-  | Fundamental | Overtones
-  | c           | c' g' c'' e'' ...
+  ly pitch      c,       c       g       c'      e'      g'      bes'
+  MIDI number   36       48      55      60      64      67      70
 
-The critical band is considered to be about a minor 3rd, or about 6/5 of
-the frequency, though this expands to perhaps a major 3rd for lower
-frequencies. (Hence composers favoring larger, more consonant intervals
-in the bass?) Maximum dissonance is found at a location studied by
-Plomp, Levelt, and others.
+  frequency     65.41    130.82  196.23  261.64  327.05  392.46  457.87
+   equal temp.  65.41    130.81  196.00  261.63  329.63  392.00  466.16
+  error         0        -0.01   -0.23   -0.01   +2.58   -0.46   +8.29
+
+The calculations use some number of harmonics, depending on the
+amplitude profile used, or frequency information supplied. Finding
+details on the harmonics for a particular instrument may require
+consulting a book, or performing spectral analysis on recordings of a
+particular instrument (e.g. via Audacity), or fiddling around with a
+synthesizer, and likely making simplifying assumptions on what gets fed
+into this module.
 
 =head1 CAVEATS
 
@@ -312,8 +317,24 @@ the harmonics and amplitudes of such. Returns tension as a number.
   );
 
 The harmonics need not be the same number, nor use the same frequencies
-nor amplitudes. This in theory allows comparison of instruments with
-different harmonic profiles.
+nor amplitudes. This allows comparison of different frequencies bearing
+different harmonic profiles. The resulting tension numbers are not
+normalized to anything; making them range from zero to one can be solved
+something like:
+
+  use List::Util qw/max/;
+
+  my @results;
+  for my $f ( 440 .. 880 ) {
+    push @results, [ $f, $tension->frequencies( 440, $f ) ];
+  }
+  my $max = max map $_->[1], @results;
+  for my $r (@results) {
+    printf "%.1f %.3f\n", $r->[0], $r->[1] / $max;
+  }
+
+See the C<eg/> directory under this module's distribution for
+example code containing the above.
 
 =item B<pitches> I<pitch1>, I<pitch2>
 
