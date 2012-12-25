@@ -9,7 +9,7 @@ use warnings;
 use Carp qw/croak/;
 use Scalar::Util qw/looks_like_number/;
 
-our $VERSION = '0.61';
+our $VERSION = '0.62';
 
 ########################################################################
 #
@@ -142,7 +142,7 @@ range), returns the frequency (Hz).
 
 =item *
 
-http://en.wikipedia.org/wiki/Pitch_%28music%29 was the source of the
+L<http://en.wikipedia.org/wiki/Pitch_%28music%29> was the source of the
 pitch/frequency conversion equations.
 
 =back

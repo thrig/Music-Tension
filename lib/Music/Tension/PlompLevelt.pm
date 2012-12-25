@@ -184,7 +184,7 @@ Beta interface! Will likely change without notice!
 =head1 DESCRIPTION
 
 Plomp-Levelt consonance curve calculations based on work by William
-Sethares and others (L<"SEE ALSO"> for links). None of this will make
+Sethares and others (L</"SEE ALSO"> for links). None of this will make
 sense without some grounding in music theory and the referenced papers.
 
 Parsing music into a form suitable for use by this module and practical
@@ -359,17 +359,18 @@ turn with each subsequent in the set. Returns tension as a number.
 
 =item *
 
-http://jjensen.org/DissonanceCurve.html - Java applet, discussion.
+L<http://jjensen.org/DissonanceCurve.html> - Java applet, discussion.
 
 =item *
 
-http://sethares.engr.wisc.edu/consemi.html - "Relating Tuning and Timbre"
-by William Sethares. Also http://sethares.engr.wisc.edu/comprog.html
+L<http://sethares.engr.wisc.edu/consemi.html> - "Relating Tuning and
+Timbre" by William Sethares. Also
+L<http://sethares.engr.wisc.edu/comprog.html>
 
 =item *
 
 "Music: A Mathematical Offering", David Benson, 2008. (Chapter 4)
-http://homepages.abdn.ac.uk/mth192/pages/html/maths-music.html
+L<http://homepages.abdn.ac.uk/mth192/pages/html/maths-music.html>
 
 =item *
 
