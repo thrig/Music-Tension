@@ -1,3 +1,5 @@
+# -*- Perl -*-
+#
 # "Plomp-Levelt consonance curve" implementation
 #
 # Beta interface! May change without notice!

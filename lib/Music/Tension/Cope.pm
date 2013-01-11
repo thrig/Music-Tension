@@ -1,3 +1,5 @@
+# -*- Perl -*-
+#
 # "Copian" tension analysis for 12-pitch material in equal temperament.
 #
 # Beta interface! May change without notice!
