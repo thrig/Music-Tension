@@ -163,8 +163,8 @@ sub pitches {
 # is desired by context.
 sub vertical {
   my ( $self, $pset ) = @_;
-  croak "pitch set must be array ref\n" unless ref $pset eq 'ARRAY';
-  croak "pitch set must contain multiple elements\n" if @$pset < 2;
+  croak "pitch set must be array ref" unless ref $pset eq 'ARRAY';
+  croak "pitch set must contain multiple elements" if @$pset < 2;
   my @pcs = @$pset;
 
   # Reposition pitches upwards if subsequent lower than the initial pitch

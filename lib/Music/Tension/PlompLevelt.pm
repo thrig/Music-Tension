@@ -142,8 +142,8 @@ sub pitches {
 
 sub vertical {
   my ( $self, $pset ) = @_;
-  croak "pitch set must be array ref\n" unless ref $pset eq 'ARRAY';
-  croak "pitch set must contain multiple elements\n" if @$pset < 2;
+  croak "pitch set must be array ref" unless ref $pset eq 'ARRAY';
+  croak "pitch set must contain multiple elements" if @$pset < 2;
 
   my @freqs = map $self->pitch2freq($_), @$pset;
 
