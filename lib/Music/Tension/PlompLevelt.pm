@@ -16,7 +16,7 @@ use Music::Tension ();
 use Scalar::Util qw/looks_like_number/;
 
 our @ISA     = qw(Music::Tension);
-our $VERSION = '0.03';
+our $VERSION = '0.04';
 
 # pianowire* are from [Helmholtz 1877 p.79] relative intensity of first
 # six harmonics of piano wire, struck at 1/7th its length, for various
@@ -380,6 +380,11 @@ L<Music::Chord::Note> - obtain pitch sets for common chord names.
 
 =item *
 
+L<Music::Scala> - Scala scale file support for alternate tuning and
+temperament calculations.
+
+=item *
+
 L<Music::Tension::Cope> - alternative tension algorithm based on
 work of David Cope.
 
@@ -396,7 +401,7 @@ Jeremy Mates, E<lt>jmates@cpan.orgE<gt>
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) 2012 by Jeremy Mates
+Copyright (C) 2012-2013 by Jeremy Mates
 
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself, either Perl version 5.16 or,
