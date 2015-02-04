@@ -16,7 +16,7 @@ use Music::Tension ();
 use Scalar::Util qw/looks_like_number/;
 
 our @ISA     = qw(Music::Tension);
-our $VERSION = '0.66';
+our $VERSION = '0.69';
 
 # pianowire* are from [Helmholtz 1877 p.79] relative intensity of first
 # six harmonics of piano wire, struck at 1/7th its length, for various
@@ -351,7 +351,9 @@ is involved. Returns tension as a number.
 Given a pitch set (an array reference of integer pitch numbers that are
 ideally MIDI numbers), converts those pitches to frequencies via
 B<pitch2freq>, then calls B<frequencies> for the first pitch compared in
-turn with each subsequent in the set. Returns tension as a number.
+turn with each subsequent in the set. In scalar context, returns the
+total tension, while in list context returns the total, min, max, and an
+array reference of individual tensions of the various intervals present.
 
 =back
 
@@ -397,7 +399,7 @@ J. Acoust. Soc. Amer. 38 (4) (1965), 548-560.
 
 =head1 AUTHOR
 
-Jeremy Mates, E<lt>jmates@cpan.orgE<gt>
+thrig - Jeremy Mates (cpan:JMATES) C<< <jmates at cpan.org> >>
 
 =head1 COPYRIGHT AND LICENSE
 

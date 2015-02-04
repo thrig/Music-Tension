@@ -11,7 +11,7 @@ use warnings;
 use Carp qw/croak/;
 use Scalar::Util qw/looks_like_number/;
 
-our $VERSION = '0.66';
+our $VERSION = '0.69';
 
 ########################################################################
 #
@@ -156,7 +156,7 @@ pitch/frequency conversion equations.
 
 =head1 AUTHOR
 
-Jeremy Mates, E<lt>jmates@cpan.orgE<gt>
+thrig - Jeremy Mates (cpan:JMATES) C<< <jmates at cpan.org> >>
 
 =head1 COPYRIGHT AND LICENSE
 
