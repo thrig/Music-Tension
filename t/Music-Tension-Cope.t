@@ -3,10 +3,12 @@
 use strict;
 use warnings;
 
-use Test::More tests => 23;
-BEGIN { use_ok('Music::Tension::Cope') }
+use Test::Most;    # plan is down at bottom
 
+use Music::Tension::Cope;
 my $mt = Music::Tension::Cope->new;
+
+isa_ok( $mt, 'Music::Tension::Cope' );
 
 # Worked out from p.233 [Cope 2005] example, XXX find his lookup tables
 # in published code? If so, could have { metername => { beatnum => value, ...
@@ -90,3 +92,5 @@ is( $mtc->metric( 1, 2 ), 0.25, 'metric 4/4 beat 1 custom weight' );
 
 # inherited from parent class
 is( $mtc->pitch2freq(69), 640, 'pitch 69 to frequency, ref pitch 640' );
+
+plan tests => 23;

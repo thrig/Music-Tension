@@ -3,10 +3,11 @@
 use strict;
 use warnings;
 
-use Test::More tests => 10;
-BEGIN { use_ok('Music::Tension::PlompLevelt') }
+use Test::Most;    # plan is down at bottom
 
+use Music::Tension::PlompLevelt;
 my $tension = Music::Tension::PlompLevelt->new;
+
 isa_ok( $tension, 'Music::Tension::PlompLevelt' );
 
 is( sprintf( "%.03f", $tension->frequencies( 440, 440 ) ),
@@ -22,7 +23,7 @@ is( sprintf( "%.03f", $tension->frequencies( 440, 440 * 9 / 8 ) ),
 is( sprintf( "%.03f", $tension->pitches( 69, 69 ) ),
   0.017, 'tension of pitches at unison' );
 
-is( sprintf( "%.01f", $tension->vertical( [qw/60 64 67/] ) ),
+is( sprintf( "%.01f", scalar $tension->vertical( [qw/60 64 67/] ) ),
   3.6, 'tension of major triad (equal temperament)' );
 
 if ( $ENV{AUTHOR_TEST_JMATES} ) {
@@ -62,3 +63,5 @@ is( $mtc->frequencies( 440, 495 ), 0, 'zero times anything is zero tension' );
 
 # inherited from parent class
 is( $mtc->pitch2freq(69), 640, 'pitch 69 to frequency, ref pitch 640' );
+
+plan tests => 9;

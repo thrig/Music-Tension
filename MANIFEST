@@ -10,6 +10,7 @@ eg/gen-pl-nums
 lib/Music/Tension.pm
 lib/Music/Tension/Cope.pm
 lib/Music/Tension/PlompLevelt.pm
+t/00-load.t
 t/Music-Tension-Cope.t
 t/Music-Tension-PlompLevelt.t
 t/Music-Tension.t
