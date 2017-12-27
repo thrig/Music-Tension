@@ -13,7 +13,7 @@ use Music::Tension ();
 use Scalar::Util qw/looks_like_number/;
 
 our @ISA     = qw(Music::Tension);
-our $VERSION = '1.01';
+our $VERSION = '1.02';
 
 my $DEG_IN_SCALE = 12;
 
@@ -57,9 +57,9 @@ sub new {
         }
         $self->{_tensions} = $param{tensions};
     } else {
-        # Default interval tentions taken from "Computer Models of Musical
-        # Creativity", Cope, p.229-230, from least tension (0.0) to greatest
-        # (1.0), less if greater than an octave.
+        # Default interval tensions taken from "Computer Models of
+        # Musical Creativity", Cope, p.229-230, from least tension (0.0)
+        # to greatest (1.0), less if greater than an octave.
         $self->{_tensions} = {
             0  => 0.0,
             1  => 1.0,

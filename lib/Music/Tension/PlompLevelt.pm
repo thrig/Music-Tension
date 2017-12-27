@@ -14,7 +14,7 @@ use Music::Tension ();
 use Scalar::Util qw/looks_like_number/;
 
 our @ISA     = qw(Music::Tension);
-our $VERSION = '1.01';
+our $VERSION = '1.02';
 
 # pianowire* are from [Helmholtz 1877 p.79] relative intensity of first
 # six harmonics of piano wire, struck at 1/7th its length, for various
