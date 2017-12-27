@@ -11,7 +11,7 @@ use warnings;
 use Carp qw/croak/;
 use Scalar::Util qw/looks_like_number/;
 
-our $VERSION = '0.70';
+our $VERSION = '1.00';
 
 ########################################################################
 #
@@ -61,8 +61,6 @@ __END__
 Music::Tension - music tension analysis
 
 =head1 SYNOPSIS
-
-Beta interface! May change without notice!
 
   my $t = Music::Tension ();
   $t->pitch2freq(60);

@@ -1,8 +1,6 @@
 # -*- Perl -*-
 #
 # "Plomp-Levelt consonance curve" implementation
-#
-# Beta interface! May change without notice!
 
 package Music::Tension::PlompLevelt;
 
@@ -16,7 +14,7 @@ use Music::Tension ();
 use Scalar::Util qw/looks_like_number/;
 
 our @ISA     = qw(Music::Tension);
-our $VERSION = '0.70';
+our $VERSION = '1.00';
 
 # pianowire* are from [Helmholtz 1877 p.79] relative intensity of first
 # six harmonics of piano wire, struck at 1/7th its length, for various
@@ -171,8 +169,6 @@ __END__
 Music::Tension::PlompLevelt - Plomp-Levelt consonance curve calculations
 
 =head1 SYNOPSIS
-
-Beta interface! Will likely change without notice!
 
   use Music::Tension::PlompLevelt;
   my $tension = Music::Tension::PlompLevelt->new;

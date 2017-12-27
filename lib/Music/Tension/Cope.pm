@@ -1,8 +1,6 @@
 # -*- Perl -*-
 #
 # "Copian" tension analysis for 12-pitch material in equal temperament.
-#
-# Beta interface! May change without notice!
 
 package Music::Tension::Cope;
 
@@ -15,7 +13,7 @@ use Music::Tension ();
 use Scalar::Util qw/looks_like_number/;
 
 our @ISA     = qw(Music::Tension);
-our $VERSION = '0.70';
+our $VERSION = '1.00';
 
 my $DEG_IN_SCALE = 12;
 
@@ -197,8 +195,6 @@ __END__
 Music::Tension::Cope - tension analysis for equal temperament music
 
 =head1 SYNOPSIS
-
-Beta interface! Has and will change without notice!
 
   use Music::Tension::Cope;
   my $tension = Music::Tension::Cope->new;
