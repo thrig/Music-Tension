@@ -4,22 +4,20 @@
 
 package Music::Tension::Cope;
 
-use 5.010000;
+our $VERSION = '1.03';
+
 use strict;
 use warnings;
-
 use Carp qw/croak/;
-use Music::Tension ();
 use Scalar::Util qw/looks_like_number/;
 
-our @ISA     = qw(Music::Tension);
-our $VERSION = '1.03';
+use parent qw(Music::Tension);
 
 my $DEG_IN_SCALE = 12;
 
 ########################################################################
 #
-# SUBROUTINES
+# METHODS
 
 sub new {
     my ( $class, %param ) = @_;
@@ -50,7 +48,7 @@ sub new {
     }
 
     if ( exists $param{tensions} ) {
-        croak "tensions must be hash reference"
+        croak "tensions must be a hash reference"
           unless defined $param{tensions} and ref $param{tensions} eq 'HASH';
         for my $i ( 0 .. 11 ) {
             croak "tensions must include all intervals from 0 through 11"
@@ -158,31 +156,6 @@ sub pitches {
     $tension = 0 if $tension < 0;
 
     return $tension;
-}
-
-# accumulate tension values for two phrases at each possible offset
-# since v1.03
-sub offset_tensions {
-    my ( $self, $phrase1, $phrase2 ) = @_;
-    croak "phrase1 is too short"
-      unless defined $phrase1
-      and ref $phrase1 eq 'ARRAY'
-      and $#{$phrase1} > 1;
-    croak "phrase2 is too short"
-      unless defined $phrase2
-      and ref $phrase2 eq 'ARRAY'
-      and @$phrase2;
-    my $max = $#{$phrase1};
-    my @tensions;
-    for my $offset ( 0 .. $max ) {
-        for my $i ( 0 .. $#{$phrase2} ) {
-            my $delta = $i + $offset;
-            last if $delta > $max;
-            push @{ $tensions[$offset] },
-              $self->pitches( $phrase1->[$delta], $phrase2->[$i] );
-        }
-    }
-    return @tensions;
 }
 
 # tension from first note to all others above it in a passed pitch set.
@@ -393,47 +366,6 @@ towards the end of the measure:
   value    | 2     2     6     2
   tension  | 0.05  0.10  0.05  0.20
 
-=item B<offset_tensions> I<phrase1>, I<phrase2>
-
-Since version 1.03.
-
-Accumulates the tension between the two given phrases (array references
-of pitch numbers) at each possible offset between the two. For example
-given the two phrases C<D F E D> and C<A C B A> these can be compared at
-the following offsets where the voices overlap:
-
-  0
-    A  C  B  A
-    D  F  E  D
-    69 72 71 69
-    62 65 64 62
-  
-  1
-       A  C  B  A
-    D  F  E  D
-       69 72 71
-    62 65 64 62
-  
-  2
-          A  C  B  A
-    D  F  E  D
-          69 72
-    62 65 64 62
-  
-  3
-             A  C  B  A
-    D  F  E  D
-             69
-    62 65 64 62
-
-The final three comparisons are typical for canon, fugue, or imitation.
-L</COUNTERPOINT> may also be relevant here.
-
-The return value is a list of array references of the tensions; for
-the above there would be four elements, with the first array reference
-for offset 0 having four tension values, the second three tension
-values, etc.
-
 =item B<vertical> I<pitch_set_reference>
 
 B<vertical> accepts an array reference of pitches (integers), and
@@ -465,75 +397,12 @@ higher ones makes sense.)
 =item B<pitches> I<pitch1>, I<pitch2>
 
 Accepts two pitches (integers) and returns the tension of the interval
-formed between those two pitches.
+formed between those two pitches. An absolute interval is used, so this
+method will not suit styles where a D below A (a fifth) differs from an
+A below D (fourth) in terms of consonance. (Whether the fourth is
+consonant or not varies in the Western tradition.)
 
 =back
-
-=head1 COUNTERPOINT
-
-Related: the B<offset_tensions> method.
-
-Strict counterpoint rates intervals as acceptable or not acceptable
-depending on the horizontal or vertical intervals involved. There is
-some wiggle room whereby certain vertical dissonances may be resolved by
-ties or suspensions, and there may be allowances for vertical
-dissonances that use an interval larger than an octave (but then maybe
-negative points for letting the voices wander too far apart). Anyways,
-rating intervals in a binary fashion is possible with this module; for
-vertical intervals one opinion might be:
-
-  my $vert = Music::Tension::Cope->new(
-      octave_adjust => 0,
-      tensions      => {
-          0  => 1,    # unison
-          1  => 0,    # minor second
-          2  => 0,    # major second
-          3  => 1,    # minor third
-          4  => 1,    # major third
-          5  => 0,    # fourth
-          6  => 0,    # the evil, evil tritone
-          7  => 1,    # fifth
-          8  => 1,    # minor sixth
-          9  => 1,    # major sixth
-          10 => 0,    # minor seventh
-          11 => 0,    # major seventh
-      }
-  );
-  $vert->pitches( 60, 66 ); # C,Fsharp -> 0 (not okay)
-  $vert->pitches( 60, 67 ); # C,G -> 1 (okay)
-
-Dissonant vertical intervals greater than an octave would need to be
-manually allowed for; if all of them are acceptable, set
-C<<octave_adjust => 1>> and then C<0> would mean "not okay" and any
-positive value "okay".
-
-Allowed horizontal (melodic) intervals depend on the rule system; Norden
-1969 allows for:
-
-  my $hori = Music::Tension::Cope->new(
-      octave_adjust => 1,
-      tensions      => {
-          0  => 0,    # repeated notes (okay in 1st species)
-          1  => 1,    # minor second
-          2  => 1,    # major second
-          3  => 1,    # minor third
-          4  => 1,    # major third
-          5  => 1,    # fourth
-          6  => 1,    # the evil, evil tritone
-          7  => 1,    # fifth
-          8  => 1,    # minor sixth
-          9  => 0,    # major sixth
-          10 => 0,    # minor seventh
-          11 => 0,    # major seventh
-      }
-  );
-
-And then any positive value from B<pitches> is okay, and zero not.
-Norden however recommends a direction change and step following a
-tritone leap, various restrictions to avoid outlining certain chords
-over multiple horizontal intervals, and other such complications.
-Other authors restrict the use of tritone leaps in melody ("hard to
-sing"), etc.
 
 =head1 SEE ALSO
 
@@ -554,25 +423,11 @@ that make use of this module.
 
 =item *
 
-"Fundamental Counterpoint", Hugo Norden, 1969.
-
-=item *
-
-"Polyphonic Dissonance", Jeremy Mates, 2019.
-https://github.com/thrig/music/musicref
-
-=item *
-
 "Theory of Harmony", Arnold Schoenberg, 1983.
 
 =item *
 
 L<Music::Chord::Note> - obtain pitch sets for common chord names.
-
-=item *
-
-L<Music::Tension::PlompLevelt> - alternative tension algorithm based on
-work of William Sethares.
 
 =back
 

@@ -2,13 +2,11 @@
 
 use strict;
 use warnings;
-use Test::Most;    # plan is down at bottom
+use Test::Most tests => 61;
 my $deeply = \&eq_or_diff;
 
 use Music::Tension::Cope;
 my $mt = Music::Tension::Cope->new;
-
-isa_ok( $mt, 'Music::Tension::Cope' );
 
 # Worked out from p.233 [Cope 2005] example, XXX find his lookup tables
 # in published code? If so, could have { metername => { beatnum => value, ...
@@ -165,5 +163,3 @@ dies_ok { $vert->offset_tensions( {} ) } qw/phrase1/;
 dies_ok { $vert->offset_tensions( [qw/62 65 64 62/] ) } qw/phrase2/;
 dies_ok { $vert->offset_tensions( [qw/62 65 64 62/], [] ) } qw/phrase2/;
 dies_ok { $vert->offset_tensions( [qw/62 65 64 62/], {} ) } qw/phrase2/;
-
-plan tests => 62;

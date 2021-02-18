@@ -2,13 +2,11 @@
 
 use strict;
 use warnings;
-use Test::Most;    # plan is down at bottom
+use Test::Most tests => 30;
 my $deeply = \&eq_or_diff;
 
 use Music::Tension::PlompLevelt;
 my $tension = Music::Tension::PlompLevelt->new;
-
-isa_ok( $tension, 'Music::Tension::PlompLevelt' );
 
 is( sprintf( "%.03f", $tension->frequencies( 440, 440 ) ),
     0.017, 'tension of frequency at unison' );
@@ -56,12 +54,12 @@ is( sprintf(
     0.017,
     'tension of frequency at unison II'
 );
-dies_ok { $tension->frequencies( [], 440 ) } qr/frequency1/;
-dies_ok { $tension->frequencies( 440, [] ) } qr/frequency2/;
-dies_ok { $tension->frequencies( {}, 440 ) } qr/frequency1/;
-dies_ok { $tension->frequencies( 440, {} ) } qr/frequency2/;
+dies_ok { $tension->frequencies( [],     440 ) } qr/frequency1/;
+dies_ok { $tension->frequencies( 440,    [] ) } qr/frequency2/;
+dies_ok { $tension->frequencies( {},     440 ) } qr/frequency1/;
+dies_ok { $tension->frequencies( 440,    {} ) } qr/frequency2/;
 dies_ok { $tension->frequencies( ["xa"], 440 ) } qr/frequency1/;
-dies_ok { $tension->frequencies( 440, ["xa"] ) } qr/frequency2/;
+dies_ok { $tension->frequencies( 440,    ["xa"] ) } qr/frequency2/;
 
 # equal temperament has higher tension, excepting unison/octaves
 is( sprintf( "%.03f", $tension->pitches( 69, 69 ) ),
@@ -140,5 +138,3 @@ is( $mtc->frequencies( 440, 495 ), 0, 'zero times anything is zero tension' );
 
 # inherited from parent class
 is( $mtc->pitch2freq(69), 640, 'pitch 69 to frequency, ref pitch 640' );
-
-plan tests => 31;

@@ -4,17 +4,15 @@
 
 package Music::Tension::PlompLevelt;
 
-use 5.010000;
+our $VERSION = '1.03';
+
 use strict;
 use warnings;
-
 use Carp qw/croak/;
 use List::Util qw/sum/;
-use Music::Tension ();
 use Scalar::Util qw/looks_like_number/;
 
-our @ISA     = qw(Music::Tension);
-our $VERSION = '1.03';
+use parent qw(Music::Tension);
 
 # pianowire* are from [Helmholtz 1877 p.79] relative intensity of first
 # six harmonics of piano wire, struck at 1/7th its length, for various
@@ -29,7 +27,7 @@ my %AMPLITUDES = (
 
 ########################################################################
 #
-# SUBROUTINES
+# METHODS
 
 sub new {
     my ( $class, %param ) = @_;
