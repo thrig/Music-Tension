@@ -1,6 +1,6 @@
 # -*- Perl -*-
 #
-# "Copian" tension analysis for 12-pitch material in equal temperament.
+# "Copian" tension analysis for 12-pitch material in equal temperament
 
 package Music::Tension::Cope;
 
@@ -13,7 +13,7 @@ use Music::Tension ();
 use Scalar::Util qw/looks_like_number/;
 
 our @ISA     = qw(Music::Tension);
-our $VERSION = '1.02';
+our $VERSION = '1.03';
 
 my $DEG_IN_SCALE = 12;
 
@@ -50,16 +50,17 @@ sub new {
     }
 
     if ( exists $param{tensions} ) {
-        croak "tensions must be hash reference" if ref $param{tensions} ne 'HASH';
+        croak "tensions must be hash reference"
+          unless defined $param{tensions} and ref $param{tensions} eq 'HASH';
         for my $i ( 0 .. 11 ) {
             croak "tensions must include all intervals from 0 through 11"
               if !exists $param{tensions}->{$i};
         }
         $self->{_tensions} = $param{tensions};
     } else {
-        # Default interval tensions taken from "Computer Models of
+        # default interval tensions taken from "Computer Models of
         # Musical Creativity", Cope, p.229-230, from least tension (0.0)
-        # to greatest (1.0), less if greater than an octave.
+        # to greatest (1.0), less if greater than an octave
         $self->{_tensions} = {
             0  => 0.0,
             1  => 1.0,
@@ -80,22 +81,23 @@ sub new {
     return $self;
 }
 
-# Approach tension - horizontal tension, I'm assuming harmonic function,
+# approach tension - horizontal tension, I'm assuming harmonic function,
 # therefore limit to intervals in same register.
 sub approach {
     my ( $self, $p1 ) = @_;
-    croak "pitch is required" if !defined $p1;
-    croak "pitch must be integer" if $p1 !~ m/^-?\d+$/;
+    croak "pitch is required"     if !defined $p1;
+    croak "pitch must be integer" if $p1 !~ m/^-?[0-9]+$/;
 
     $self->pitches( 0, abs($p1) % $DEG_IN_SCALE );
 }
 
-# Tension over durations
+# tension over durations
 sub duration {
     my ( $self, $input, $duration ) = @_;
 
     croak "duration must be a positive value"
-      if !looks_like_number($duration)
+      if !defined $duration
+      or !looks_like_number($duration)
       or $duration <= 0;
 
     my $tension;
@@ -104,7 +106,7 @@ sub duration {
     } elsif ( looks_like_number($input) ) {
         $tension = $input;
     } else {
-        croak "unknown pitch set or prior tension value '$input'";
+        croak "unknown pitch set or prior tension value";
     }
 
     # p.232-233 [Cope 2005] - this result "is then added to any grouping's
@@ -126,25 +128,27 @@ sub frequencies {
     $self->pitches( map $self->freq2pitch($_), $f1, $f2 );
 }
 
-# Tension based on where note is within measure p.232 [Cope 2005]
+# tension based on where note is within measure p.232 [Cope 2005]
 sub metric {
     my ( $self, $b, $v ) = @_;
     croak "input must be positive numeric"
-      if !looks_like_number($b)
+      if !defined $b
+      or !looks_like_number($b)
       or $b <= 0
+      or !defined $v
       or !looks_like_number($v)
       or $v <= 0;
 
     return ( $b * $self->{_metric_weight} ) / $v;
 }
 
-# Tension for two pitches
+# tension for two pitches
 sub pitches {
     my ( $self, $p1, $p2 ) = @_;
     croak "two pitches required" if !defined $p1 or !defined $p2;
     croak "pitches must be integers"
-      if $p1 !~ m/^-?\d+$/
-      or $p2 !~ m/^-?\d+$/;
+      if $p1 !~ m/^-?[0-9]+$/
+      or $p2 !~ m/^-?[0-9]+$/;
 
     my $interval = abs( $p2 - $p1 );
     my $octave   = int( $interval / $DEG_IN_SCALE );
@@ -156,16 +160,43 @@ sub pitches {
     return $tension;
 }
 
-# Tension from first note to all others above it in a passed pitch set.
-# Returns sum, min, max, and array ref of tensions, unless just the sum
-# is desired by context.
+# accumulate tension values for two phrases at each possible offset
+# since v1.03
+sub offset_tensions {
+    my ( $self, $phrase1, $phrase2 ) = @_;
+    croak "phrase1 is too short"
+      unless defined $phrase1
+      and ref $phrase1 eq 'ARRAY'
+      and $#{$phrase1} > 1;
+    croak "phrase2 is too short"
+      unless defined $phrase2
+      and ref $phrase2 eq 'ARRAY'
+      and @$phrase2;
+    my $max = $#{$phrase1};
+    my @tensions;
+    for my $offset ( 0 .. $max ) {
+        for my $i ( 0 .. $#{$phrase2} ) {
+            my $delta = $i + $offset;
+            last if $delta > $max;
+            push @{ $tensions[$offset] },
+              $self->pitches( $phrase1->[$delta], $phrase2->[$i] );
+        }
+    }
+    return @tensions;
+}
+
+# tension from first note to all others above it in a passed pitch set.
+# returns sum, min, max, and an array ref of tensions, unless just the
+# sum is desired by context
 sub vertical {
     my ( $self, $pset ) = @_;
-    croak "pitch set must be array ref" unless ref $pset eq 'ARRAY';
+    croak "pitch set must be array ref"
+      unless defined $pset and ref $pset eq 'ARRAY';
     croak "pitch set must contain multiple elements" if @$pset < 2;
     my @pcs = @$pset;
 
-    # Reposition pitches upwards if subsequent lower than the initial pitch
+    # reposition pitches upwards if subsequent lower than the
+    # initial pitch
     for my $i ( 1 .. $#pcs ) {
         if ( $pcs[$i] < $pcs[0] ) {
             $pcs[$i] += $DEG_IN_SCALE +
@@ -217,15 +248,14 @@ This module offers tension analysis of equal temperament 12-pitch music,
 using the method outlined by David Cope in the text "Computer Models of
 Musical Creativity". The various methods will calculate the tension of
 verticals (simultaneous pitches), tension over a given duration, and so
-forth. Larger numbers indicate greater tension (dissonance) and smaller
-numbers consonance.
+forth. Larger numbers indicate greater tension (dissonance).
 
 Cope uses the sum of the methods B<approach>, B<duration>, B<metric>,
 and B<vertical> to calculate the overall tension for each beat in an
-example Chorale. B<approach> and B<metric> will be the trickiest to
+example Chorale. The B<approach> and B<metric> will be the trickiest to
 implement, as they rely on knowing the interval of the harmonic change
 between the beats or having a lookup table available to calculate
-tension for random beats in random time signatures.
+tension for random beats of random time signatures.
 
 Various details are not captured by the tension analysis, notably if a
 particular pitch is chromatic (implying an underlying key that is
@@ -290,9 +320,9 @@ the same adjustment.
 =item *
 
 I<tensions> must be a hash reference that must contain all intervals
-from (unison) to 11 (major seventh) inclusive. The default values are a
-distillation of an involved consideration of the overtone series by
-Cope; see the references below for the gory details.
+from C<0> (unison) to C<11> (major seventh) inclusive. The default
+values are taken from Cope 2005; see the references below for the
+gory details.
 
 =back
 
@@ -302,16 +332,14 @@ Presently a thin wrapper around B<pitches>, where I<pitch1> is relative
 to unison (0), and will be mapped to that register, regardless of sign
 or direction of the music. Used for horizontal tensions. Cope indicates
 this is for "root motions" which from the example provided appears to be
-the harmonic changes, not specific interval leaps, so tension of unison
-for a tonic extension, tension of fifth for I-V6-I stasis or trips up or
-down the circle of fifths, and so forth:
+the harmonic change, not a specific interval leap:
 
   $tension->approach( 0 );    # stasis (tonic -> tonic)
   $tension->approach( 5 );    # perfect fourth (tonic -> pre-dominant)
   $tension->approach( 7 );    # fifth (tonic -> dominant)
 
 Something else may be necessary to account for other root motions;
-Schoenberg (in "Theory of Harmony") favors rising fourths and falling
+Schoenberg ("Theory of Harmony") favors rising fourths and falling
 thirds over the weaker falling fourth and rising thirds, and points out
 the weaker motions can be rectified over a longer phrase. Also relevant
 is whether the music is melodically rising or falling, and harmonically
@@ -339,11 +367,11 @@ piano with the sustain pedal down vs. a church organ.
 =item B<frequencies> I<f1>, I<f2>
 
 Calculates tension between two given frequencies (Hz), via crude
-conversion of the frequencies to whatever-are-the-closest MIDI pitch
-numbers, and then calling B<pitches> on those pitches. Mostly for
-interface compatibility with L<Music::Tension::PlompLevelt>; presumably
-could be replaced with mathematical expression Cope uses to avoid the
-kluge-to-MIDI-pitch-numbers?
+conversion of the frequencies to the closest MIDI pitch numbers,
+and then calling B<pitches>. Mostly for interface compatibility
+with L<Music::Tension::PlompLevelt>; presumably could be replaced
+with mathematical expression Cope uses to avoid the kluge to MIDI
+pitch numbers?
 
 =item B<metric> I<beat_number>, I<beat_value>
 
@@ -354,16 +382,57 @@ second, etc) and the value a non-zero number used to adjust the results.
 Cope indicates the use of a lookup table to provide the value, due to
 the complexity of where the weightings occur depending on the meter
 (e.g. 3/4 stresses the first (and perhaps second) beats, while 6/8 has
-stress on first and fourth). Lilypond auto-beaming should show one
-opinion on how notes are grouped and therefore where the stresses are,
-among other sources. Cope's tension values are lower on the beat, and
-higher towards the end of the measure:
+stress on first and fourth). LilyPond auto-beaming should show the
+typical musical opinion on how notes are grouped and therefore where the
+stresses are. Cope's tension values are lower on the beat, and higher
+towards the end of the measure:
 
             4/4 time
   ----------------------------------
   beat     | 1     2     3     4
   value    | 2     2     6     2
   tension  | 0.05  0.10  0.05  0.20
+
+=item B<offset_tensions> I<phrase1>, I<phrase2>
+
+Since version 1.03.
+
+Accumulates the tension between the two given phrases (array references
+of pitch numbers) at each possible offset between the two. For example
+given the two phrases C<D F E D> and C<A C B A> these can be compared at
+the following offsets where the voices overlap:
+
+  0
+    A  C  B  A
+    D  F  E  D
+    69 72 71 69
+    62 65 64 62
+  
+  1
+       A  C  B  A
+    D  F  E  D
+       69 72 71
+    62 65 64 62
+  
+  2
+          A  C  B  A
+    D  F  E  D
+          69 72
+    62 65 64 62
+  
+  3
+             A  C  B  A
+    D  F  E  D
+             69
+    62 65 64 62
+
+The final three comparisons are typical for canon, fugue, or imitation.
+L</COUNTERPOINT> may also be relevant here.
+
+The return value is a list of array references of the tensions; for
+the above there would be four elements, with the first array reference
+for offset 0 having four tension values, the second three tension
+values, etc.
 
 =item B<vertical> I<pitch_set_reference>
 
@@ -381,14 +450,17 @@ of the pitch set.
 
 B<vertical> returns the tension, minimum tension, maximum tension, and a
 reference to a list of tensions for each interval. Except in scalar
-context, where just the tension value is returned.
+context where only the tension value is returned.
 
 An alternative method would be to perform tension checks on each pitch
 to any higher pitches, such that C<0 3 4 5> would also count the
 intervals present above the root (3 to 4, 3 to 5, and 4 to 5), instead
 of just the minor 3rd, major 3rd, and perfect fourth up from the root.
 An earlier version of this module did so, but the current code is trying
-to follow what Cope does as closely as possible.
+to follow what Cope does as closely as possible. (Voices in the middle
+of a 4-voice chorale tend to be less important than the Bass and
+Soprano, so Cope not considering intervals from the middle voices to the
+higher ones makes sense.)
 
 =item B<pitches> I<pitch1>, I<pitch2>
 
@@ -396,6 +468,72 @@ Accepts two pitches (integers) and returns the tension of the interval
 formed between those two pitches.
 
 =back
+
+=head1 COUNTERPOINT
+
+Related: the B<offset_tensions> method.
+
+Strict counterpoint rates intervals as acceptable or not acceptable
+depending on the horizontal or vertical intervals involved. There is
+some wiggle room whereby certain vertical dissonances may be resolved by
+ties or suspensions, and there may be allowances for vertical
+dissonances that use an interval larger than an octave (but then maybe
+negative points for letting the voices wander too far apart). Anyways,
+rating intervals in a binary fashion is possible with this module; for
+vertical intervals one opinion might be:
+
+  my $vert = Music::Tension::Cope->new(
+      octave_adjust => 0,
+      tensions      => {
+          0  => 1,    # unison
+          1  => 0,    # minor second
+          2  => 0,    # major second
+          3  => 1,    # minor third
+          4  => 1,    # major third
+          5  => 0,    # fourth
+          6  => 0,    # the evil, evil tritone
+          7  => 1,    # fifth
+          8  => 1,    # minor sixth
+          9  => 1,    # major sixth
+          10 => 0,    # minor seventh
+          11 => 0,    # major seventh
+      }
+  );
+  $vert->pitches( 60, 66 ); # C,Fsharp -> 0 (not okay)
+  $vert->pitches( 60, 67 ); # C,G -> 1 (okay)
+
+Dissonant vertical intervals greater than an octave would need to be
+manually allowed for; if all of them are acceptable, set
+C<<octave_adjust => 1>> and then C<0> would mean "not okay" and any
+positive value "okay".
+
+Allowed horizontal (melodic) intervals depend on the rule system; Norden
+1969 allows for:
+
+  my $hori = Music::Tension::Cope->new(
+      octave_adjust => 1,
+      tensions      => {
+          0  => 0,    # repeated notes (okay in 1st species)
+          1  => 1,    # minor second
+          2  => 1,    # major second
+          3  => 1,    # minor third
+          4  => 1,    # major third
+          5  => 1,    # fourth
+          6  => 1,    # the evil, evil tritone
+          7  => 1,    # fifth
+          8  => 1,    # minor sixth
+          9  => 0,    # major sixth
+          10 => 0,    # minor seventh
+          11 => 0,    # major seventh
+      }
+  );
+
+And then any positive value from B<pitches> is okay, and zero not.
+Norden however recommends a direction change and step following a
+tritone leap, various restrictions to avoid outlining certain chords
+over multiple horizontal intervals, and other such complications.
+Other authors restrict the use of tritone leaps in melody ("hard to
+sing"), etc.
 
 =head1 SEE ALSO
 
@@ -413,6 +551,15 @@ that make use of this module.
 =item *
 
 "The Craft of Musical Composition", Paul Hindemith, 1942.
+
+=item *
+
+"Fundamental Counterpoint", Hugo Norden, 1969.
+
+=item *
+
+"Polyphonic Dissonance", Jeremy Mates, 2019.
+https://github.com/thrig/music/musicref
 
 =item *
 
@@ -435,7 +582,7 @@ thrig - Jeremy Mates (cpan:JMATES) C<< <jmates at cpan.org> >>
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) 2012,2017,2018 by Jeremy Mates
+Copyright (C) 2012 by Jeremy Mates
 
 https://opensource.org/licenses/BSD-3-Clause
 

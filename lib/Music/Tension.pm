@@ -1,6 +1,6 @@
 # -*- Perl -*-
 #
-# Parent class for music tension analysis modules.
+# Parent class for music tension analysis modules
 
 package Music::Tension;
 
@@ -11,7 +11,7 @@ use warnings;
 use Carp qw/croak/;
 use Scalar::Util qw/looks_like_number/;
 
-our $VERSION = '1.02';
+our $VERSION = '1.03';
 
 ########################################################################
 #
@@ -24,7 +24,8 @@ sub new {
     # just MIDI support here, see Music::Scala for scala scale file support
     if ( exists $param{reference_frequency} ) {
         croak "reference_frequency must be a number"
-          if !looks_like_number $param{reference_frequency};
+          if !defined $param{reference_frequency}
+          or !looks_like_number $param{reference_frequency};
         $self->{_reference_frequency} = $param{reference_frequency};
     } else {
         $self->{_reference_frequency} = 440;
@@ -37,8 +38,9 @@ sub new {
 sub freq2pitch {
     my ( $self, $freq ) = @_;
     croak "frequency must be a positive number"
-      if !looks_like_number $freq
-      or $freq < 0;
+      if !defined $freq
+      or !looks_like_number $freq
+      or $freq <= 0;
 
     return sprintf "%.0f",
       69 + 12 * ( log( $freq / $self->{_reference_frequency} ) / log(2) );
@@ -47,7 +49,8 @@ sub freq2pitch {
 sub pitch2freq {
     my ( $self, $pitch ) = @_;
     croak "pitch must be MIDI number"
-      if !looks_like_number $pitch
+      if !defined $pitch
+      or !looks_like_number $pitch
       or $pitch < 0;
 
     return $self->{_reference_frequency} * ( 2**( ( $pitch - 69 ) / 12 ) );
@@ -77,14 +80,13 @@ Music::Tension - music tension analysis
 
 Music tension (dissonance) analysis. This module merely provides pitch
 and frequency conversion routines. The other modules under this
-distribution provide various algorithms that produce a number for how
-consonant or dissonant a chord or other musical events are, presumably
-for use in musical analysis or composition.
+distribution provide routines that produce a number for how consonant
+or dissonant a chord or other musical events are according to some
+system of rules.
 
 The numbers produced by one module can only be used in comparison with
-other musical events calculated by the same module; no attempt has been
-made to correlate the output of any overlapping methods between the
-different modules. (Though comparisons may be interesting.)
+that same module; no attempt has been made to correlate the output of
+any overlapping methods between the different modules.
 
 =head2 SUB-MODULES
 
@@ -125,10 +127,9 @@ frequency use by the frequency/pitch conversion calls (440 by default).
 =item B<freq2pitch> I<frequency>
 
 Given a frequency (Hz), returns the integer pitch number (which might
-also be a MIDI number, unless that range is exceeded somehow).
-Fractional pitch results are rounded to the nearest pitch number. (I'm
-not sure if the standard practice is to round or truncate the
-conversion, so I guessed to round.)
+also be a MIDI number). Fractional pitch results are rounded to the
+nearest pitch number. (I'm not sure if the standard practice is to round
+or truncate the conversion, so I guessed to round.)
 
 =item B<pitch2freq> I<pitch>
 
@@ -158,7 +159,7 @@ thrig - Jeremy Mates (cpan:JMATES) C<< <jmates at cpan.org> >>
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) 2012,2017,2018 by Jeremy Mates
+Copyright (C) 2012 by Jeremy Mates
 
 https://opensource.org/licenses/BSD-3-Clause
 
