@@ -7,6 +7,7 @@ package Music::Tension::Counterpoint;
 
 our $VERSION = '1.03';
 
+use 5.008;
 use strict;
 use warnings;
 use Carp qw/croak/;
@@ -137,6 +138,20 @@ sub pitches {
     return $self->{_tensions}->{ $mod - $neg };
 }
 
+# why not hide former synopsis code in a method?
+sub usable_offsets {
+    my $self = shift;
+    my @ret  = $self->offset_tensions(@_);
+    my @ok;
+  OFFS: for my $i ( 1 .. $#ret ) {
+        for my $consonant ( @{ $ret[$i] } ) {
+            next OFFS unless $consonant;
+        }
+        push @ok, $i;
+    }
+    return @ok;
+}
+
 sub vertical {
     my ( $self, $pset ) = @_;
     croak "pitch set must be array ref"
@@ -199,18 +214,14 @@ Music::Tension::Counterpoint - interval tests for strict counterpoint
   $cpt->pitches(74, 69);    # 0
 
   # D F E D against A C B A at each possible offset
-  my @ret = $cpt->offset_tensions(
-      [qw/62 65 64 62/],
-      [qw/69 72 71 69/]
+  my @tensions = $cpt->offset_tensions(
+      [qw/62 65 64 62/], [qw/69 72 71 69/]
   );
-  # are any of the positive offsets usable?
-  my @ok;
-  OFFS: for my $i ( 1 .. $#ret ) {
-      for my $consonant ( @{ $ret[$i] } ) {
-          next OFFS unless $consonant;
-      }
-      push @ok, $i;
-  }
+
+  # what offsets from offset_tensions are all consonant?
+  my @consonant_offsets = $cpt->usable_offsets(
+      [qw/62 65 64 62/], [qw/69 72 71 69/]
+  );
 
   # consideration of chords (or pitch sets)
   $cpt->vertical( [qw/60 64 67 72/] );  # 1
@@ -229,6 +240,14 @@ boolean fashion is possible with this module.
 If you need more complexity consider instead L<Music::Tension::Cope>, or
 perhaps copy and modify this code to suit the rules system in question.
 The allowed intervals can be customized via I<tensions> and I<interior>.
+
+=head2 CAVEATS
+
+No consideration of mode is made; chromatic intervals alien to a
+particular mode (or scale) may be rated as consonant by this module.
+L<Music::Scales> could help with modal considerations.
+
+This module is fixed to a 12 tone system.
 
 =head1 METHODS
 
@@ -288,9 +307,24 @@ the interval formed is consonant or not. If I<pitch1> is higher than
 I<pitch2> a negative interval will be used; this is why I<tensions>
 requires negative interval values.
 
+=item B<usable_offsets> I<phrase1>, I<phrase2>
+
+Calls B<offset_tensions> (from L<Music::Tension>) with the given phrases
+(array references of integers) and returns a list of the non-zero
+offsets that have only consonant intervals between the two phrases. If
+any; otherwise, the empty list is returned.
+
+This is suitable for canon, fugue, or imitation where having a phrase
+(possibly one that has been fiddled with according to various rules set
+down many centuries ago) that can be used with the original phrase at
+different offsets is desirable.
+
+See C<eg/dorian-fugue-subject> in this module's distribution for an
+example use of this method.
+
 =item B<vertical> I<pset>
 
-Accepts an array reference that should be a list of integers, returns a
+Accepts an array reference that should be a list of integers. Returns a
 boolean indicating whether the pitches are consonant or not. The lowest
 (or root) pitch will be checked for consonance (via B<pitches>, and thus
 the I<tensions> table) against every higher pitch. The other pitches, if

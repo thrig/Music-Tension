@@ -7,6 +7,7 @@ META.yml
 README
 eg/calc-forte-tensions
 eg/compare-tensions
+eg/dorian-fugue-subject
 eg/fit-tensions
 eg/gen-pl-nums
 lib/Music/Tension.pm
